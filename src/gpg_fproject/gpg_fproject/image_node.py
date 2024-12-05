@@ -56,30 +56,36 @@ class ImageNode(Node):
 
     def hsv_limit(self, user_color):
         if user_color=='blue':
-            lower_hsv = np.array([100, 100, 100])
-            upper_hsv = np.array([140, 255, 255])
+            lower_hsv = np.array([120, 209, 220])
+            upper_hsv = np.array([120, 209, 220])
         elif user_color=='red':
-            lower_hsv = np.array([0, 100, 100])
-            upper_hsv = np.array([20, 255, 255])
+            lower_hsv = np.array([0, 145, 200])
+            upper_hsv = np.array([0, 145, 200])
         elif user_color=='green':
-            lower_hsv = np.array([40, 100, 100])
-            upper_hsv = np.array([80, 255, 255])
+            lower_hsv = np.array([60, 255, 120])
+            upper_hsv = np.array([60, 255, 120])
         elif user_color=='yellow':
-            lower_hsv = np.array([20, 100, 100])
-            upper_hsv = np.array([40, 255, 255])
+            lower_hsv = np.array([22, 255, 178])
+            upper_hsv = np.array([22, 255, 178])
         return lower_hsv, upper_hsv
 
-    def process_image(self, cv_image, msg):
+    def process_image(self, cv_image):
         hsv_img = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
         user_color = self.user_color
         user_form = self.user_form
 
         if user_color is None or user_form is None:
-            self.get_logger().info('User color or form not provided yet')
+            self.get_logger().info('User color or form not provided yet or not already received')
             return
 
         lower_hsv, upper_hsv = self.hsv_limit(user_color)
         mask = cv2.inRange(hsv_img, lower_hsv, upper_hsv)
+        #detecting contours
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(cv_image, contours, -1, (0, 255, 0), 3)
+        #get the contour form 
+        
+        
         result = cv2.bitwise_and(cv_image, cv_image, mask=mask)
         
 
@@ -88,8 +94,6 @@ class ImageNode(Node):
         #cv2.imwrite('mask.png', mask)
         #cv2.imwrite('result.png', result)   
         #cv2.waitKey(1)
-
-
 
 def main(args=None):
     rclpy.init(args=args)

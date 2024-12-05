@@ -17,10 +17,10 @@ class UserNode(Node):
         color_input = input('Enter a color. Color should be between [blue, red, green, yellow]: ')
         form_input = input('Enter a form. Form should be between [box, triangle, circle]: ')
         color_info = self.get_user_color(color_input)
-        object_info = self.get_user_form(form_input)
+        form_info = self.get_user_form(form_input)
         self.user_publisher.publish(color_info)
-        self.another_user_publisher.publish(object_info)
-        self.get_logger().info(f'Dear user the color published is : {color_info.data}\nand the object form is : {object_info.data}')
+        self.another_user_publisher.publish(form_info)
+        self.get_logger().info(f'Dear user the color published is : {color_info.data} and the object form is : {form_info.data}')
 
     def get_user_color(self, color_input):
         color_info = String()
