@@ -37,18 +37,26 @@ class ImageNode(Node):
         self.user_form = None
 
     def camera_info_callback(self, msg):
+        """
+        Callback function for the camera info topic"""
         self.camera_info = msg
         self.camera_model.from_camera_info(msg)
 
     def color_callback(self, msg):
+        """
+        Callback function for the color topic"""
         self.user_color = msg.data
         self.get_logger().info(f'I heard the color asked by the user: {self.user_color}')
 
     def form_callback(self, msg):
+        """
+        Callback function for the form topic"""
         self.user_form = msg.data
         self.get_logger().info(f'I heard the form asked by the user: {self.user_form}')
 
     def image_callback(self, msg):
+        """
+        Callback function for the image topic"""
         if self.camera_info is None:
             return
         try:
@@ -60,6 +68,8 @@ class ImageNode(Node):
             self.get_logger().error(f'Error while converting image: {e}')
 
     def get_hsv_limit(self, user_color):
+        """
+        Function to get the HSV limits for the color asked by the user"""
         if user_color=='blue':
             lower_hsv = np.array([120, 209, 220])
             upper_hsv = np.array([120, 209, 220])
@@ -75,6 +85,8 @@ class ImageNode(Node):
         return lower_hsv, upper_hsv
 
     def process_image(self, cv_image):
+        """
+        Function to process the image and detect the object"""
         hsv_img = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
         user_color = self.user_color
         user_form = self.user_form
@@ -104,6 +116,8 @@ class ImageNode(Node):
             self.get_logger().info('Circle detected')
 
 def main(args=None):
+    """
+    Main function to run the image node"""
     rclpy.init(args=args)
     image_node = ImageNode()
     rclpy.spin(image_node)

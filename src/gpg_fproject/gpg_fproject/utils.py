@@ -2,6 +2,8 @@ import cv2
 import imutils
 
 def get_hsv_value_based_on_click(image_path):
+    """
+    This function is used to get the HSV value of a pixel in an image by clicking on the pixel"""
     image = cv2.imread(image_path)
     global image_hsv
     image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -11,17 +13,12 @@ def get_hsv_value_based_on_click(image_path):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def pick_color(event, x, y, flags, param):
+def pick_color(event, x, y):
+    """
+    This function is used to get the HSV value of a pixel in an image by clicking on the pixel"""
     if event == cv2.EVENT_LBUTTONDOWN:
         hsv_value = image_hsv[y, x]
         print(f"HSV Value at ({x}, {y}): {hsv_value}")
-
-def main():
-    input_image_path = 'D:/ros_2_docker/final_project_ros2_2024/Final_project_ros2/square.png'
-
-    get_hsv_value_based_on_click(image_path=input_image_path)
-# if __name__ == '__main__':
-#    main()
 
 
 def get_shape(img, contours, eps):
