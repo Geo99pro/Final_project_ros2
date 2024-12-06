@@ -1,14 +1,19 @@
 import cv2
+import imutils
 import rclpy
 import numpy as np
 import image_geometry
 
+from opencv_test import get_shape
 from rclpy.node import Node
 from geometry_msgs.msg import PointStamped
 from sensor_msgs.msg import Image, CameraInfo
 from tf2_ros import TransformListener, Buffer
 from cv_bridge import CvBridge, CvBridgeError
 from std_msgs.msg import Float64MultiArray, String
+
+#helpful links
+#https://pyimagesearch.com/2021/10/06/opencv-contour-approximation/
 
 
 class ImageNode(Node):
@@ -48,7 +53,7 @@ class ImageNode(Node):
             return
         try:
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            self.get_logger().info('Image received and processing ....')
+            self.get_logger().info('Image received and processing and will be processed')
             self.process_image(cv_image, msg)
             
         except CvBridgeError as e:
@@ -80,20 +85,23 @@ class ImageNode(Node):
 
         lower_hsv, upper_hsv = self.hsv_limit(user_color)
         mask = cv2.inRange(hsv_img, lower_hsv, upper_hsv)
-        #detecting contours
-        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        cv2.drawContours(cv_image, contours, -1, (0, 255, 0), 3)
-        #get the contour form 
-        
-        
-        result = cv2.bitwise_and(cv_image, cv_image, mask=mask)
-        
+        contours = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        approx_object_form, c, text, x, y = get_shape(cv_image, contours, 0.04)
+        self.get_logger().info(f'Approximated object form: {approx_object_form}')
+        cv2.drawContours(cv_image, [c], -1, (0, 255, 0), 3)
+        cv2.putText(cv_image, text, (x, y - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+        cv2.imshow("Original Image", cv_image)
+        cv2.imshow("HSV Image", hsv_img)
+        cv2.imshow("Mask", mask)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
-        #cv2.imshow('Mask', mask)
-        #cv2.imshow('Result', result)
-        #cv2.imwrite('mask.png', mask)
-        #cv2.imwrite('result.png', result)   
-        #cv2.waitKey(1)
+        if user_form == 'triangle' and approx_object_form == 'triangle':
+            self.get_logger().info('Triangle detected')
+        elif user_form == 'square' and approx_object_form == 'square':
+            self.get_logger().info('Square detected')
+        elif user_form == 'circle' and approx_object_form == 'circle':
+            self.get_logger().info('Circle detected')
 
 def main(args=None):
     rclpy.init(args=args)
