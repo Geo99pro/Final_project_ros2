@@ -59,7 +59,7 @@ class ImageNode(Node):
         except CvBridgeError as e:
             self.get_logger().error(f'Error while converting image: {e}')
 
-    def hsv_limit(self, user_color):
+    def get_hsv_limit(self, user_color):
         if user_color=='blue':
             lower_hsv = np.array([120, 209, 220])
             upper_hsv = np.array([120, 209, 220])
