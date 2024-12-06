@@ -20,7 +20,6 @@ def pick_color(event, x, y):
         hsv_value = image_hsv[y, x]
         print(f"HSV Value at ({x}, {y}): {hsv_value}")
 
-
 def get_shape(img, contours, eps):
     """
     This function is used to approximate the contour of an object in an image and determine the shape of the object
