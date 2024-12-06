@@ -4,7 +4,7 @@ import rclpy
 import numpy as np
 import image_geometry
 
-from opencv_test import get_shape
+from gpg_fproject.gpg_fproject.utils import get_shape
 from rclpy.node import Node
 from geometry_msgs.msg import PointStamped
 from sensor_msgs.msg import Image, CameraInfo
