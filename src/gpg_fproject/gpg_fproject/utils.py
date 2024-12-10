@@ -47,7 +47,7 @@ def get_shape(img, contours, eps):
     #for eps in np.linspace(0.01, 0.05, 10):
     cnts = imutils.grab_contours(contours)
     c = max(cnts, key=cv2.contourArea)
-    (x, y, w, h) = cv2.boundingRect(c)
+    x, y, w, h = cv2.boundingRect(c)
     peri = cv2.arcLength(c, True)
     approx = cv2.approxPolyDP(c, eps*peri, True)
     text = "eps={:.2f}, num_points = {}".format(eps, len(approx))
