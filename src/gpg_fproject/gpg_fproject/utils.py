@@ -23,18 +23,25 @@ def pick_color(event, x, y):
 def get_shape(img, contours, eps):
     """
     This function is used to approximate the contour of an object in an image and determine the shape of the object
-    Helpfull for the link: #https://pyimagesearch.com/2021/10/06/opencv-contour-approximation/
+    Helpful the link: #https://pyimagesearch.com/2021/10/06/opencv-contour-approximation/
     
     Args:
 
-        img: The image where the object is located, should be in matrix form. If the image is in a file, it should be read using cv2.imread() to get the matrix form
+        img: The image containing the object. This can be a path to the image or the image itself as a NumPy array
         contours: The contours of the object in the image
-        eps: The epsilon value to approximate the contour of the object
+        eps: The approximation accuracy parameter
 
     Returns:
 
         object_form: The shape of the object in the image
+        c : The contour of the object in the image
+        text: The text to be displayed on the image
+        x: The x-coordinate of the object in the image
+        y: The y-coordinate of the object in the image
     """
+    if isinstance(img, str):
+        img = cv2.imread(img)
+    
     object_form = None
     img_copy = img.copy()
     #for eps in np.linspace(0.01, 0.05, 10):
