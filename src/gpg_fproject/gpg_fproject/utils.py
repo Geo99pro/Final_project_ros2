@@ -51,7 +51,7 @@ def get_shape(img, mask, eps):
     peri = cv2.arcLength(max_contours, True)
     approx = cv2.approxPolyDP(max_contours, eps*peri, True)
     text = "eps={:.2f}, num_points = {}".format(eps, len(approx))
-    cv2.putText(img_copy, text, (coords[0], coords[1] - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+    #cv2.putText(img_copy, text, (coords[0], coords[1] - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
     print(f"By approximating the contour, the value is: {approx}")
     
     if len(approx) == 3:
@@ -64,8 +64,4 @@ def get_shape(img, mask, eps):
         object_form = "Circle"
         print(f"The object countour after approximation is a Circle either {object_form} points.")
     
-    return object_form, max_contours, text, coords #coords as tuple (x, y, w, h)
-
-if __name__ == "__main__":
-    #get_hsv_value_based_on_click("test.jpg")
-    get_shape("test.jpg", 0.04)
+    return cnts, object_form, max_contours, text, coords #coords as tuple (x, y, w, h)

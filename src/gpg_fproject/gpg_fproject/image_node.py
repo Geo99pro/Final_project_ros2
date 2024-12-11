@@ -1,5 +1,4 @@
 import cv2
-import imutils
 import rclpy
 import numpy as np
 import image_geometry
@@ -99,30 +98,31 @@ class ImageNode(Node):
 
         lower_hsv, upper_hsv = self.get_hsv_limit(user_color)
         mask = cv2.inRange(hsv_img, lower_hsv, upper_hsv)
-        contours = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
+        if np.all(mask == 0):
+            self.get_logger().info('No object detected')
+            return
+        
+        contours, approx_object_form, max_contours, text, coords = get_shape(cv_image, mask, 0.04)
+        self.get_logger().info(f'Approximated object form: {approx_object_form}')
+        cv2.drawContours(cv_image.copy(), [max_contours], -1, (0, 255, 0), 3)
+        cv2.putText(cv_image.copy(), text, (coords[0], coords[1] - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+        
+        cv2.imshow("Original Image", cv_image)
+        #cv2.imshow("HSV Image", hsv_img)
+        cv2.imshow("Mask", mask)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        
+        if user_form == 'triangle' and approx_object_form == 'triangle':
+            self.get_logger().info('Triangle detected')
+        elif user_form == 'box' and approx_object_form == 'box':
+            self.get_logger().info('Square detected')
+        elif user_form == 'circle' and approx_object_form == 'circle':
+            self.get_logger().info('Circle detected')
+        else:
+            pass
         if contours:
-            approx_object_form, c, text, x, y = get_shape(cv_image, contours, 0.04)
-            self.get_logger().info(f'Approximated object form: {approx_object_form}')
-            cv2.drawContours(cv_image, [c], -1, (0, 255, 0), 3)
-            cv2.putText(cv_image, text, (x, y - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-            
-            cv2.imshow("Original Image", cv_image)
-            cv2.imshow("HSV Image", hsv_img)
-            cv2.imshow("Mask", mask)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
-            if user_form == 'triangle' and approx_object_form == 'triangle':
-                self.get_logger().info('Triangle detected')
-            elif user_form == 'box' and approx_object_form == 'box':
-                self.get_logger().info('Square detected')
-            elif user_form == 'circle' and approx_object_form == 'circle':
-                self.get_logger().info('Circle detected')
-            else:
-                pass
-
-            M = cv2.moments(c)
+            M = cv2.moments(max_contours)
             if M["m00"] !=0:
                 cX = int(M["m10"] / M["m00"])
                 cY = int(M["m01"] / M["m00"])
