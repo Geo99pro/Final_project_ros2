@@ -1,5 +1,5 @@
 import cv2
-import imutils
+#import imutils
 
 def get_hsv_value_based_on_click(image_path):
     """
@@ -20,7 +20,7 @@ def pick_color(event, x, y):
         hsv_value = image_hsv[y, x]
         print(f"HSV Value at ({x}, {y}): {hsv_value}")
 
-def get_shape(img, contours, eps):
+def get_shape(img, mask, eps):
     """
     This function is used to approximate the contour of an object in an image and determine the shape of the object
     Helpful the link: #https://pyimagesearch.com/2021/10/06/opencv-contour-approximation/
@@ -45,13 +45,13 @@ def get_shape(img, contours, eps):
     object_form = None
     img_copy = img.copy()
     #for eps in np.linspace(0.01, 0.05, 10):
-    cnts = imutils.grab_contours(contours)
+    cnts,_ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)#imutils.grab_contours(contours)
     c = max(cnts, key=cv2.contourArea)
-    x, y, w, h = cv2.boundingRect(c)
+    coords = cv2.boundingRect(c)
     peri = cv2.arcLength(c, True)
     approx = cv2.approxPolyDP(c, eps*peri, True)
     text = "eps={:.2f}, num_points = {}".format(eps, len(approx))
-    cv2.putText(img_copy, text, (x, y - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+    cv2.putText(img_copy, text, (coords[0], coords[1] - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
     print(f"By approximating the contour, the value is: {approx}")
     
     if len(approx) == 3:
@@ -65,3 +65,7 @@ def get_shape(img, contours, eps):
         print(f"The object countour after approximation is a Circle either {object_form} points.")
     
     return object_form, c, text, x, y
+
+if __name__ == "__main__":
+    #get_hsv_value_based_on_click("test.jpg")
+    get_shape("test.jpg", 0.04)
