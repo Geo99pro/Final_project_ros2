@@ -46,10 +46,10 @@ def get_shape(img, mask, eps):
     img_copy = img.copy()
     #for eps in np.linspace(0.01, 0.05, 10):
     cnts,_ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)#imutils.grab_contours(contours)
-    c = max(cnts, key=cv2.contourArea)
-    coords = cv2.boundingRect(c)
-    peri = cv2.arcLength(c, True)
-    approx = cv2.approxPolyDP(c, eps*peri, True)
+    max_contours = max(cnts, key=cv2.contourArea)
+    coords = cv2.boundingRect(max_contours)
+    peri = cv2.arcLength(max_contours, True)
+    approx = cv2.approxPolyDP(max_contours, eps*peri, True)
     text = "eps={:.2f}, num_points = {}".format(eps, len(approx))
     cv2.putText(img_copy, text, (coords[0], coords[1] - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
     print(f"By approximating the contour, the value is: {approx}")
@@ -64,7 +64,7 @@ def get_shape(img, mask, eps):
         object_form = "Circle"
         print(f"The object countour after approximation is a Circle either {object_form} points.")
     
-    return object_form, c, text, x, y
+    return object_form, max_contours, text, coords #coords as tuple (x, y, w, h)
 
 if __name__ == "__main__":
     #get_hsv_value_based_on_click("test.jpg")
