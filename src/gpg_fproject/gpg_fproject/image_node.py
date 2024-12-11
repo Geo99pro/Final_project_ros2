@@ -17,7 +17,7 @@ class ImageNode(Node):
     def __init__(self):
         super().__init__('image_node')
         self.create_subscription(Image, '/image', self.image_callback, 10)
-        self.create_publisher(CameraInfo, '/camera_info', self.camera_info_callback, 10)
+        self.create_subscription(CameraInfo, '/camera_info', self.camera_info_callback, 10)
 
         self.servo_publisher = self.create_publisher(Float64MultiArray, '/servo_controller/commands', 10)
         self.point_publisher = self.create_publisher(PointStamped, '/object_position', 10)
@@ -115,7 +115,7 @@ class ImageNode(Node):
 
             if user_form == 'triangle' and approx_object_form == 'triangle':
                 self.get_logger().info('Triangle detected')
-            elif user_form == 'square' and approx_object_form == 'square':
+            elif user_form == 'box' and approx_object_form == 'box':
                 self.get_logger().info('Square detected')
             elif user_form == 'circle' and approx_object_form == 'circle':
                 self.get_logger().info('Circle detected')
