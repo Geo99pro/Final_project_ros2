@@ -107,11 +107,6 @@ class ImageNode(Node):
         cv2.drawContours(cv_image.copy(), [max_contours], -1, (0, 255, 0), 3)
         cv2.putText(cv_image.copy(), text, (coords[0], coords[1] - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
         
-        cv2.imshow("Original Image", cv_image)
-        #cv2.imshow("HSV Image", hsv_img)
-        cv2.imshow("Mask", mask)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
         
         if user_form == 'triangle' and approx_object_form == 'triangle':
             self.get_logger().info('Triangle detected')
@@ -127,6 +122,11 @@ class ImageNode(Node):
                 cX = int(M["m10"] / M["m00"])
                 cY = int(M["m01"] / M["m00"])
 
+            cv2.imshow("Original Image", cv_image)
+            #cv2.imshow("HSV Image", hsv_img)
+            cv2.imshow("Mask", mask)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
             cv2.circle(cv_image, (cX, cY), 5, (255, 255, 255), -1)
             cv2.putText(cv_image, "centroid", (cX - 25, cY - 25),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
