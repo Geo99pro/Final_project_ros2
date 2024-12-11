@@ -141,7 +141,7 @@ class ImageNode(Node):
             servo_msg.data = [self.current_servo_position]
             self.servo_publisher.publish(servo_msg)
 
-            bottom_point = tuple(c[c[:, :, 1].argmax()][0])
+            bottom_point = tuple(max_contours[max_contours[:, :, 1].argmax()][0])
             bottom_point = [cX, bottom_point[1]]
             self.get_logger().info(f'Bottom point of the object: {bottom_point}')
 
