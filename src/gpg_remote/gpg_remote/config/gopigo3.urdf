@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+<robot name="gopigo3">
+  <!-- ROS2 Control Configuration -->
+  <ros2_control name="gpg_remote" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboRosControlPlugin</plugin>
+    </hardware>
+
+    <joint name="left_wheel">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>  
+    </joint>
+    <joint name="right_wheel">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>  
+    </joint>
+    <joint name="servo">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+    </joint>
+    <sensor name="line">
+      <state_interface name="level0"/>
+      <state_interface name="level1"/>
+      <state_interface name="level2"/>
+      <state_interface name="level3"/>
+      <state_interface name="level4"/>
+    </sensor>
+    <sensor name="battery">
+      <state_interface name="voltage"/>
+    </sensor>
+  </ros2_control>
+
+  <!-- Materials -->
+  <material name="blue">
+    <color rgba="0 0 0.8 1"/>
+  </material>
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+
+  <!-- Base Link -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.005" radius="0.075"/>
+      </geometry>
+      <origin xyz="0 0 0.0375" rpy="0 0 0"/>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.005" radius="0.075"/>
+      </geometry>
+      <origin xyz="0 0 0.0375" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 0.0375" rpy="0 0 0"/>
+      <inertia ixx="0.00014083" ixy="0.0" ixz="0.0" iyy="0.00014083" iyz="0.0" izz="0.00028125"/>
+    </inertial>
+  </link>
+
+  <!-- Right Wheel Link -->
+  <link name="right_wheel_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.04" radius="0.0375"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.04" radius="0.0375"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.00004948" ixy="0.0" ixz="0.0" iyy="0.00007031" iyz="0.0" izz="0.00004948"/>
+    </inertial>
+  </link>
+
+  <!-- Right Wheel Joint -->
+  <joint name="right_wheel" type="continuous">
+    <parent link="base_link"/>
+    <child link="right_wheel_link"/>
+    <origin xyz="0 -0.062 0.0375" rpy="0 0 0"/> 
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <!-- Left Wheel Link -->
+  <link name="left_wheel_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.04" radius="0.0375"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.04" radius="0.0375"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.00004948" ixy="0.0" ixz="0.0" iyy="0.00007031" iyz="0.0" izz="0.00004948"/>
+    </inertial>
+  </link>
+
+  <!-- Left Wheel Joint -->
+  <joint name="left_wheel" type="continuous">
+    <parent link="base_link"/>
+    <child link="left_wheel_link"/>
+    <origin xyz="0 0.062 0.0375" rpy="0 0 0"/> 
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <!-- Servo Link -->
+  <link name="servo_link">
+    <visual>
+      <geometry>
+        <box size="0.03 0.03 0.03"/> 
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.03 0.03 0.03"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.05"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0000075" ixy="0" ixz="0" iyy="0.0000075" iyz="0" izz="0.0000075"/>
+    </inertial>
+  </link>
+
+  <!-- Servo Joint -->
+  <joint name="servo" type="revolute">
+    <parent link="base_link"/>
+    <child link="servo_link"/>
+    <origin xyz="0.075 0 0.065" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/> 
+    <limit lower="-1.57" upper="1.57" effort="1" velocity="1"/>
+  </joint>
+
+  <!-- Camera Link -->
+  <link name="camera_link"> 
+    <visual>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.02"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0000003333" ixy="0" ixz="0" iyy="0.0000003333" iyz="0" izz="0.0000003333"/>
+    </inertial>
+  </link>
+
+  <!-- Camera Joint -->
+  <joint name="camera_to_servo_link" type="fixed">
+    <parent link="servo_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.015 0 0" rpy="-1.57 0 0"/>
+  </joint>
+
+  <!-- Robot Support Link -->
+  <link name="robot_support_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.0375" radius="0.01"/>
+      </geometry>
+      <origin xyz="0 0 -0.01875" rpy="0 0 0"/>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.0375" radius="0.01"/>
+      </geometry>
+      <origin xyz="0 0 -0.01875" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 -0.01875" rpy="0 0 0"/>
+      <inertia ixx="0.000008475" ixy="0.0" ixz="0.0" iyy="0.000008475" iyz="0.0" izz="0.0000025"/>
+    </inertial>
+  </link>
+
+  <!-- Robot Support Joint -->
+  <joint name="robot_support_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="robot_support_link"/>
+    <origin xyz="-0.065 0 0.0375" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Gazebo Plugin -->
+  <gazebo>
+    <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="gz_ros2_control-system">
+      <ros2_control>
+        <parameters>$(find gpg_urdf)/controllers.yaml</parameters>
+      </ros2_control>
+    </plugin>
+  </gazebo>
+</robot>
+
+
+
+<!--<gazebo>
+    <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="gz_ros2_control-system">
+      <parameters>$(find gpg_urdf)/gpg_urdf/controllers.yaml</parameters>
+    </plugin>
+  </gazebo>-->

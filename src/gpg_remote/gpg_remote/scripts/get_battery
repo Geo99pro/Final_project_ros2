@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ssh pi@$1 'python -c "import gopigo3; print gopigo3.GoPiGo3().get_voltage_battery()"'

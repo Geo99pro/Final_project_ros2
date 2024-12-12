@@ -1,0 +1,38 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 20
+  
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+      
+    servo_controller:
+      type: forward_command_controller/ForwardCommandController
+  
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    gpg_remote_broadcaster:
+      type: gpg_remote/GPGRemoteBroadcaster
+
+diff_drive_controller:
+  ros__parameters:
+    left_wheel_names: ['left_wheel']
+    right_wheel_names: ['right_wheel']
+    wheel_separation : 0.15
+    wheel_radius : 0.035
+
+    pose_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
+    twist_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
+    linear:
+      x:
+        has_velocity_limits: true
+        max_velocity: 0.2
+    angular:
+      z:
+        has_velocity_limits: true
+        max_velocity: 3.14
+
+servo_controller:
+  ros__parameters:
+    interface_name: 'position'
+    joints: ['servo']

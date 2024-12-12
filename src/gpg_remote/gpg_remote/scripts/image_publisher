@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+# Software License Agreement (BSD License)
+#
+# Copyright (c) 2008, Willow Garage, Inc.
+# Copyright (c) 2017, Wouter Caarls
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above
+#    copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided
+#    with the distribution.
+#  * Neither the name of Willow Garage, Inc. nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# Revision $Id$
+
+# http://wiki.ros.org/cv_bridge/Tutorials/ConvertingBetweenROSImagesAndOpenCVImagesPython
+
+import rclpy
+from rclpy.node import Node
+
+import cv2
+from sensor_msgs.msg import Image, CameraInfo
+from cv_bridge import CvBridge
+
+# http://picamera.readthedocs.io/en/release-1.9/recipes1.html#capturing-to-a-network-stream
+
+import io
+import socket
+import struct
+import numpy as np
+
+class ImagePublisher(Node):
+    def __init__(self):
+        super().__init__('image_publisher')
+        
+        self.pub = self.create_publisher(Image, 'image', 10)
+        self.bridge = CvBridge()
+    
+        self.declare_parameter('host', '192.168.0.201')
+        self.declare_parameter('port', 8000)
+        self.declare_parameter('image_width', 320)
+        self.declare_parameter('image_height', 240)
+        self.declare_parameter('camera_name', 'rpi')
+        self.declare_parameter('camera_matrix', [323.716986, 0.000000, 162.429921, 0.000000, 323.390347, 117.752059, 0.000000, 0.000000, 1.000000]) # 3x3
+        self.declare_parameter('rectification_matrix', [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]) # 3x3
+        self.declare_parameter('projection_matrix', [325.144379, 0.000000, 163.368673, 0.000000, 0.000000, 325.851654, 117.296646, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000]) # 3x4
+        self.declare_parameter('distortion_model', 'plumb_bob')
+        self.declare_parameter('distortion_coefficients', [0.080938, -0.257429, -0.002955, 0.003629, 0.000000])
+        
+        self.infopub = self.create_publisher(CameraInfo, 'camera_info', 10)
+        self.timer = self.create_timer(1.0, self.timer_callback)
+        
+        # Connect to Raspberry Pi
+        host = self.get_parameter('host').value
+        port = self.get_parameter('port').value
+        
+        self.get_logger().info('Connecting to %s:%d' % (host, port))
+        
+        self.client_socket = socket.socket()
+        self.client_socket.connect((host, port))
+        self.connection = self.client_socket.makefile('rb')
+        
+        self.get_logger().info('Spinning')
+        
+    def timer_callback(self):
+        msg = CameraInfo()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = 'camera'
+        msg.height = self.get_parameter('image_width').value
+        msg.width = self.get_parameter('image_height').value
+        msg.distortion_model = self.get_parameter('distortion_model').value
+        msg.d = self.get_parameter('distortion_coefficients').value
+        msg.k = self.get_parameter('camera_matrix').value
+        msg.r = self.get_parameter('rectification_matrix').value
+        msg.p = self.get_parameter('projection_matrix').value
+        
+        self.infopub.publish(msg)
+
+    def readimage(self):
+        image_len = struct.unpack('<L', self.connection.read(struct.calcsize('<L')))[0]
+        if not image_len:
+            return
+        # Construct a stream to hold the image data and read the image
+        # data from the connection
+        image_stream = io.BytesIO()
+        image_stream.write(self.connection.read(image_len))
+        
+        # Rewind the stream, open it as an image with PIL and do some
+        # processing on it
+        image_stream.seek(0)
+        frame = np.frombuffer(image_stream.getvalue(), dtype=np.uint8)
+        image = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+        
+        msg = self.bridge.cv2_to_imgmsg(image, "bgr8")
+        msg.header.frame_id = "camera_link"
+        msg.header.stamp = self.get_clock().now().to_msg()
+        
+        self.pub.publish(msg)
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = ImagePublisher()
+    
+    while rclpy.ok():
+        node.readimage()
+        rclpy.spin_once(node, timeout_sec=0)
+    
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
