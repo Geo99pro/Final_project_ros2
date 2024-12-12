@@ -7,3 +7,6 @@ purple_rectangle.jpg
 trash.py
 dissertation_master_2024_master_loïck.pdf
 test.py
+build/
+install/
+log/

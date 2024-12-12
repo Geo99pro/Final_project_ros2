@@ -11,7 +11,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name, ['gpg_fproject_controller/controller.py']),
-        ('share/' + package_name, ['gpg_fproject_controller/reach_goal_node.py']),
+        ('share/' + package_name, ['gpg_fproject_controller/reach_goal.py']),
         ('share/' + package_name, ['launch/launch.py']),
         
     ],
@@ -23,7 +23,7 @@ setup(
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [ 'reach_goal_node = gpg_fproject_controller.reach_goal_node:main',
+        'console_scripts': [ 'reach_goal_node = gpg_fproject_controller.reach_goal:main',
                             'controller = gpg_fproject_controller.controller:main'
         ],
     },
