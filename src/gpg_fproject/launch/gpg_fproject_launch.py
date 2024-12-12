@@ -34,7 +34,7 @@ def generate_launch_description():
     time_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        arguments="/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+        arguments=["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"],
         output="both"
     )
 
@@ -71,11 +71,12 @@ def generate_launch_description():
         parameters=[robot_description, {'use_sim_time': use_sim_time}],
     )
     
-    rviz_node = Node(package='rviz2',
-                    executable='rviz2',
-                    name='rviz2',
-                    output='log',
-                    arguments=['-d', rviz_config_file],)
+
+    rviz_node = Node(package="rviz2",
+                    executable="rviz2",
+                    name="rviz2",
+                    output="log",
+                    arguments=["-d", rviz_config_file],)
 
     sim_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -120,14 +121,12 @@ def generate_launch_description():
             user_node,
             controller_node,
             reach_goal_node, 
+            image_bridge_node,
             robot_publisher, 
             sim_node, 
             rviz_node, 
-            robot_controller_spawner, 
             robot_spawner,
             joint_state_broadcaster_spawner, 
-            servo_controller_spawner, 
-            image_bridge_node, 
             delay_controllers_after_joint_state_broadcaster_spawner]
 
     return LaunchDescription(nodes)

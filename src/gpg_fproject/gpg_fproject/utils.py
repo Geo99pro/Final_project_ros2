@@ -51,17 +51,21 @@ def get_shape(img, mask, eps):
     peri = cv2.arcLength(max_contours, True)
     approx = cv2.approxPolyDP(max_contours, eps*peri, True)
     text = "eps={:.2f}, num_points = {}".format(eps, len(approx))
+    #cv2.drawContours(img_copy, [approx], -1, (0, 0, 255), 3)
+    #cv2.imshow("Original Image", img_copy)
+    #cv2.waitKey(1)
+    #cv2.destroyAllWindows()
     #cv2.putText(img_copy, text, (coords[0], coords[1] - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-    print(f"By approximating the contour, the value is: {approx}")
+    #print(f"By approximating the contour, the value is: {approx}")
     
     if len(approx) == 3:
         object_form = "Triangle"
-        print(f"The object countour after approximation is a Triangle either {object_form} points.")
+        print(f"The object countour after approximation is a Triangle either {len(approx)} points.")
     elif len(approx) == 4:
         object_form = "Square"
-        print(f"The object countour after approximation is a Square either {object_form} points.")
+        print(f"The object countour after approximation is a Square either {len(approx)} points.")
     else:
         object_form = "Circle"
-        print(f"The object countour after approximation is a Circle either {object_form} points.")
+        print(f"The object countour after approximation is a Circle either {len(approx)} points.")
     
     return cnts, object_form, max_contours, text, coords #coords as tuple (x, y, w, h)
