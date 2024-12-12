@@ -10,7 +10,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name, 'world', ['world/fproject_world.sdf']),
+        ('share/' + package_name, '/worlds', ['worlds/fproject_world.sdf']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
