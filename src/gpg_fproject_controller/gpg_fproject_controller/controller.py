@@ -41,18 +41,32 @@ class MovePhysicalRobot(Node):
         goal_point.point.z = 0.0
 
         try:
-            transformed_goal = self.tf_buffer.transform(goal_point, 'base_link', timeout=rclpy.duration.Duration(seconds=1))
-            euclidean_distance = sqrt(pow(transformed_goal.point.x, 2) + pow(transformed_goal.point.y, 2))
-            angle_to_goal = atan2(transformed_goal.point.y, transformed_goal.point.x)
+            transformed_goal = self.tf_buffer.transform(goal_point,
+                                                        'base_link',
+                                                        timeout=rclpy.duration.Duration(seconds=1.0))
+
+            euclidean_distance = sqrt(pow(transformed_goal.point.x, 2) + 
+                                    pow(transformed_goal.point.y, 2))
+            if euclidean_distance < 0.1:
+                velocity_msg = TwistStamped()
+                velocity_msg.header.stamp = self.get_clock().now().to_msg()
+                self.publisher_.publish(velocity_msg)
+                return
+
+            angle_to_goal = atan2(transformed_goal.point.y, 
+                                transformed_goal.point.x)
 
             linear_gain = self.get_parameter('linear_gain').get_parameter_value().double_value
             angular_gain = self.get_parameter('angular_gain').get_parameter_value().double_value
 
             velocity_msg = TwistStamped()
             velocity_msg.header.stamp = self.get_clock().now().to_msg()
-            velocity_msg.twist.linear.x = min(linear_gain * euclidean_distance, 0.1)
-            velocity_msg.twist.angular.z = angular_gain * angle_to_goal
+            linear_velocity = min(linear_gain * euclidean_distance, 0.2)
+            angular_velocity = min(max(angular_gain * angle_to_goal, -1.0), 1,0)
 
+            velocity_msg.twist.linear.x = linear_velocity
+            velocity_msg.twist.angular.z = angular_velocity
+            
             self.publisher_.publish(velocity_msg)
 
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
