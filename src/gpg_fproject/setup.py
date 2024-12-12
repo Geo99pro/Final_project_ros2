@@ -11,7 +11,6 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name, ['launch/launch.py']),
-        ('share/' + package_name, '/world', ['world/fproject_world.sdf']),
         ('share/' + package_name, ['launch/gpg_fproject_launch.py']),
         ('share/' + package_name, ['gpg_fproject/controllers.yaml']),
         ('share/' + package_name, ['gpg_fproject/robot.urdf']),

@@ -19,7 +19,7 @@ def generate_launch_description():
     """
     This function is used to generate the launch description for the project"""
 
-    gazebo_model_path = os.path.join(get_package_share_path('gazebo_world'), 'world', 'fproject_world.sdf')
+    gazebo_model_path = os.path.join(get_package_share_path('gpg_fgazebo'), 'world', 'fproject_world.sdf')
     print(f'Gazebo model path is located at: {gazebo_model_path}')
 
     urdf = get_package_share_directory('gpg_fproject') / 'robot.urdf'
