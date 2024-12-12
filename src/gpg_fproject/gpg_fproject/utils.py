@@ -59,7 +59,7 @@ def get_shape(img: str, mask: np.array, eps: float, user_form: str):
     #cv2.putText(img_copy, text, (coords[0], coords[1] - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
     #print(f"By approximating the contour, the value is: {approx}")
     num_points = len(approx)
-    
+
     while user_form == "Triangle":
         if num_points == 3:
             object_form = "Triangle"
