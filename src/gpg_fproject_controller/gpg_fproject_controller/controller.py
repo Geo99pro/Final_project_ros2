@@ -41,14 +41,6 @@ class MoveRobot(Node):
         if self.goal_pose is not None:
             self.move_robot()
 
-    def move_robot(self):
-        """
-        Move the robot to the goal position
-        """
-
-        if self.goal_pose is None or self.current_pose is None:
-            return 
-
     def stop_robot(self, euclidean_distance):
         """
         Stop the robot when it reaches the goal
@@ -62,6 +54,14 @@ class MoveRobot(Node):
             self.publisher_.publish(velocity_msg)
             self.goal_pose = None   
             return
+
+    def move_robot(self):
+        """
+        Move the robot to the goal position
+        """
+
+        if self.goal_pose is None or self.current_pose is None:
+            return 
 
         goal_point = PointStamped()
         goal_point.header.frame_id = 'odom'
