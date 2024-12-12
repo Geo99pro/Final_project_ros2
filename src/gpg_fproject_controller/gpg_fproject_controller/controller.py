@@ -40,9 +40,9 @@ class MoveRobot(Node):
 
         self.current_pose = msg
         if self.goal_pose is not None:
-            self.move_physical_robot()
+            self.move_robot()
 
-    def move_physical_robot(self):
+    def move_robot(self):
         """
         Move the robot to the goal position
         """
@@ -97,9 +97,9 @@ def main(args=None):
     Main function to run the move robot node
     """
     rclpy.init(args=args)
-    move_physical_robot = MoveRobot()
-    rclpy.spin(move_physical_robot)
-    move_physical_robot.destroy_node()
+    move_robot = MoveRobot()
+    rclpy.spin(move_robot)
+    move_robot.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
