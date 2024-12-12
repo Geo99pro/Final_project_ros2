@@ -28,7 +28,7 @@ def generate_launch_description():
     robot_description_config = xacro.process_file(urdf).toxml()
     robot_description = {'robot_description': robot_description_config}
     
-    rviz_config_file = PathJoinSubstitution([FindPackageShare('gpg_remote'), 'rviz', 'gpg_remote.rviz'])
+    rviz_config_file = PathJoinSubstitution([FindPackageShare("gpg_remote"), "gpg_remote.rviz"])
     print(f'RVIZ config file is located at: {rviz_config_file}')
     
     time_bridge = Node(
@@ -36,6 +36,18 @@ def generate_launch_description():
         executable="parameter_bridge",
         arguments="/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
         output="both"
+    )
+
+    controller_node = Node(
+        package='gpg_fproject_controller',
+        executable='controller',
+        output='screen',
+    )
+
+    reach_goal_node = Node(
+        package='gpg_fproject_controller',
+        executable='reach_goal',
+        output='screen',
     )
 
     image_node = Node(
@@ -59,18 +71,19 @@ def generate_launch_description():
         parameters=[robot_description, {'use_sim_time': use_sim_time}],
     )
     
-    sim_node = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py'])),
-        launch_aarguments = {'gz_args': f"{gazebo_model_path} -r",
-                            'on_exit_shutdown': 'True'}.items(),)
-    
     rviz_node = Node(package='rviz2',
                     executable='rviz2',
                     name='rviz2',
                     output='log',
                     arguments=['-d', rviz_config_file],)
-    
+
+    sim_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py'])),
+        launch_arguments = {'gz_args': f"{gazebo_model_path} -r",
+                            'on_exit_shutdown': 'True'}.items(),
+    )
+
     robot_controller_spawner = Node(package="controller_manager",
                                     executable="spawner",
                                     arguments=["diff_drive_controller", "-c", "/controller_manager"],)
@@ -82,22 +95,31 @@ def generate_launch_description():
     servo_controller_spawner = Node(package="controller_manager",
                                     executable="spawner",
                                     arguments=["servo_controller", "--controller-manager", "/controller_manager"],)
-    
+
+    robot_spawner = Node(
+        package='ros_gz_sim',
+        executable='create',
+        arguments=['-topic', 'robot_description'],
+        output='screen',
+    )
+
     image_bridge_node = Node(package='ros_gz_bridge',
                             executable='image_bridge',
                             name='image_bridge',
                             arguments=[ "/image@sensor_msgs/msg/Image@gz.msgs.Image",
                                         "/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo"],
-                            output="screen",)
-    
+                            output="screen",
+    )   
+
     delay_controllers_after_joint_state_broadcaster_spawner = RegisterEventHandler(
         event_handler=OnProcessExit(target_action=joint_state_broadcaster_spawner,
             on_exit=[robot_controller_spawner, servo_controller_spawner],))
 
-
     nodes = [time_bridge, 
             image_node, 
-            user_node, 
+            user_node,
+            controller_node,
+            reach_goal_node, 
             robot_publisher, 
             sim_node, 
             rviz_node, 
@@ -106,5 +128,5 @@ def generate_launch_description():
             servo_controller_spawner, 
             image_bridge_node, 
             delay_controllers_after_joint_state_broadcaster_spawner]
-    
+
     return LaunchDescription(nodes)
