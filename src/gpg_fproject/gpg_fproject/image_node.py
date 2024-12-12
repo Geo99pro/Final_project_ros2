@@ -75,11 +75,15 @@ class ImageNode(Node):
             lower_hsv = np.array([0, 145, 200])
             upper_hsv = np.array([0, 145, 200])
         elif user_color=='green':
-            lower_hsv = np.array([60, 255, 120])
-            upper_hsv = np.array([60, 255, 120])
+            lower_hsv = np.array([35, 100, 100])
+            upper_hsv = np.array([85, 255, 255])
         elif user_color=='yellow':
-            lower_hsv = np.array([22, 255, 178])
-            upper_hsv = np.array([22, 255, 178])
+            lower_hsv = np.array([20, 100, 100])
+            upper_hsv = np.array([30, 255, 255])
+        elif user_color=='black':
+            lower_hsv = np.array([0, 0, 0])
+            upper_hsv = np.array([180, 255, 30])
+
         return lower_hsv, upper_hsv
 
     def process_image(self, cv_image):

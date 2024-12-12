@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 #import imutils
 
 def get_hsv_value_based_on_click(image_path):
@@ -20,7 +21,7 @@ def pick_color(event, x, y):
         hsv_value = image_hsv[y, x]
         print(f"HSV Value at ({x}, {y}): {hsv_value}")
 
-def get_shape(img, mask, eps):
+def get_shape(img: str, mask: np.array, eps: float, user_form: str):
     """
     This function is used to approximate the contour of an object in an image and determine the shape of the object
     Helpful the link: #https://pyimagesearch.com/2021/10/06/opencv-contour-approximation/
@@ -57,15 +58,27 @@ def get_shape(img, mask, eps):
     #cv2.destroyAllWindows()
     #cv2.putText(img_copy, text, (coords[0], coords[1] - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
     #print(f"By approximating the contour, the value is: {approx}")
+    num_points = len(approx)
     
-    if len(approx) == 3:
-        object_form = "Triangle"
-        print(f"The object countour after approximation is a Triangle either {len(approx)} points.")
-    elif len(approx) == 4:
-        object_form = "Square"
-        print(f"The object countour after approximation is a Square either {len(approx)} points.")
-    else:
-        object_form = "Circle"
-        print(f"The object countour after approximation is a Circle either {len(approx)} points.")
+    while user_form == "Triangle":
+        if num_points == 3:
+            object_form = "Triangle"
+        else: 
+            object_form = "Triangle approximation distorted"
+        break
+
+    while user_form == "box":
+        if num_points == 4:
+            object_form = "box"
+        else:
+            object_form = "box approximation distorted"
+        break
+
+    while user_form > 4:
+        if num_points > 4:
+            object_form = "circle"
+        else:
+            object_form = "circle approximation distorted"
+        break
     
     return cnts, object_form, max_contours, text, coords #coords as tuple (x, y, w, h)
