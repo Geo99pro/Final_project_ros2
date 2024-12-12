@@ -86,6 +86,17 @@ class ImageNode(Node):
 
         return lower_hsv, upper_hsv
 
+    def check_condition(self, user_form, approx_object_form):
+        if user_form == 'triangle' and approx_object_form in ['triangle', 'triangle approximation distorted']:
+            self.get_logger().info('Triangle detected')
+        elif user_form == 'box' and approx_object_form in ['box', 'box approximation distorted']:
+            self.get_logger().info('box detected')
+        elif user_form == 'circle' and approx_object_form in ['circle', 'circle approximation distorted']:
+            self.get_logger().info('Circle detected')
+        else:
+            self.get_logger().info('Object form not treated yet')
+            return
+
     def process_image(self, cv_image):
         """
         Function to process the image and detect the object
@@ -108,18 +119,10 @@ class ImageNode(Node):
             self.get_logger().info('No object detected')
             return
         
-        contours, approx_object_form, max_contours, text, coords = get_shape(cv_image, mask, 0.04)
+        contours, approx_object_form, max_contours, text, coords = get_shape(cv_image, mask, 0.04, user_form)
         self.get_logger().info(f'Approximated object form: {approx_object_form}')
-
-        if user_form == 'triangle' and approx_object_form == 'triangle':
-            self.get_logger().info('Triangle detected')
-        elif user_form == 'box' and approx_object_form == 'box':
-            self.get_logger().info('Square detected')
-        elif user_form == 'circle' and approx_object_form == 'circle':
-            self.get_logger().info('Circle detected')
-        else:
-            pass
-
+        
+        self.check_condition(user_form, approx_object_form)
         if contours:
             M = cv2.moments(max_contours)
             if M["m00"] !=0:

@@ -60,11 +60,11 @@ def get_shape(img: str, mask: np.array, eps: float, user_form: str):
     #print(f"By approximating the contour, the value is: {approx}")
     num_points = len(approx)
 
-    while user_form == "Triangle":
+    while user_form == "triangle":
         if num_points == 3:
-            object_form = "Triangle"
+            object_form = "triangle"
         else: 
-            object_form = "Triangle approximation distorted"
+            object_form = "triangle approximation distorted"
         break
 
     while user_form == "box":
