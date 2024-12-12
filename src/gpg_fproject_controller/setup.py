@@ -23,7 +23,7 @@ setup(
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [ 'reach_goal_node = gpg_fproject_controller.reach_goal:main',
+        'console_scripts': [ 'reach_goal = gpg_fproject_controller.reach_goal:main',
                             'controller = gpg_fproject_controller.controller:main'
         ],
     },

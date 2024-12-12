@@ -22,7 +22,7 @@ def generate_launch_description():
     gazebo_model_path = os.path.join(get_package_share_directory('gpg_fgazebo'), 'worlds', 'fproject_world.sdf')
     print(f'Gazebo model path is located at: {gazebo_model_path}')
 
-    urdf = get_package_share_directory('gpg_fproject') / 'robot.urdf'
+    urdf = get_package_share_path('gpg_fproject') / 'robot.urdf'
     print(f'URDF file is located at: {urdf}')
 
     robot_description_config = xacro.process_file(urdf).toxml()
@@ -104,7 +104,7 @@ def generate_launch_description():
     )
 
     image_bridge_node = Node(package='ros_gz_bridge',
-                            executable='image_bridge',
+                            executable='parameter_bridge',
                             name='image_bridge',
                             arguments=[ "/image@sensor_msgs/msg/Image@gz.msgs.Image",
                                         "/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo"],
@@ -124,6 +124,7 @@ def generate_launch_description():
             sim_node, 
             rviz_node, 
             robot_controller_spawner, 
+            robot_spawner,
             joint_state_broadcaster_spawner, 
             servo_controller_spawner, 
             image_bridge_node, 
