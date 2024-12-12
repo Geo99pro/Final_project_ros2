@@ -11,6 +11,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from std_msgs.msg import Float64MultiArray, String
 from gpg_fproject.utils import get_shape
 from geometry_msgs.msg import PointStamped, Vector3Stamped
+from tf2_geometry_msgs import do_transform_point
 from gpg_fproject.utils import get_hsv_value_based_on_click
 
 class ImageNode(Node):
@@ -145,19 +146,19 @@ class ImageNode(Node):
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
             cv2.circle(cv_image, (cX, cY), 5, (255, 255, 255), -1)
             
-            #cv2.imshow("Original Image", cv_image)
-            #cv2.imshow("HSV Image", hsv_img)
-            #cv2.imshow("Mask", mask)
-            #cv2.waitKey(0)
-            #cv2.destroyAllWindows()
+            cv2.imshow("Original Image", cv_image)
+            cv2.imshow("HSV Image", hsv_img)
+            cv2.imshow("Mask", mask)
+            cv2.waitKey(1)
+
 
             ray = self.camera_model.projectPixelTo3dRay(bottom_point)
-            self.get_logger().info(f'Ray: {ray}')
+            self.get_logger().info(f"Ray direction: {ray}")
 
             origin = PointStamped()
             origin.header.frame_id = "camera_link"
             origin.header.stamp = rclpy.time.Time().to_msg()
-            
+
             direction = Vector3Stamped()
             direction.header.frame_id = "camera_link"
             direction.header.stamp = rclpy.time.Time().to_msg()
@@ -165,31 +166,26 @@ class ImageNode(Node):
             direction.vector.y = ray[1]
             direction.vector.z = ray[2]
 
-            target_frame = "odom"
-            from tf2_geometry_msgs import do_transform_point
-            try:
-                #transform_origin = self.tf_buffer.transform(origin,
-                #                                            target_frame,
-                #                                            timeout=rclpy.time.Duration(seconds=2.0))
-                #transform_direction = self.tf_buffer.transform(direction,
-                #                                            target_frame,
-                #                                            timeout=rclpy.time.Duration(seconds=2.0))
-                transform = self.tf_buffer.lookup_transform(
-                target_frame,
-                origin.header.frame_id,
-                rclpy.time.Time(),
-                timeout=rclpy.time.Duration(seconds=2.0)
-)
-                transformed_origin = do_transform_point(origin, transform)
+            target_frame = 'odom'
 
+            # Transform origin and direction to odom frame
+            try:
+                transform_origin = self.tf_buffer.transform(
+                    origin, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
+                transform_direction = self.tf_buffer.transform(
+                    direction, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
             except Exception as e:
-                self.get_logger().error(f'Error while transforming the point: {e}')
+                self.get_logger().warn(f"Transformation failed: {e}")
                 return
 
-            lambda_ = -transformed_origin.point.z / ray[2]  # Avoid using transform_direction.vector.z here
-            x = transformed_origin.point.x + ray[0] * lambda_
-            y = transformed_origin.point.y + ray[1] * lambda_
-            z = 0.0
+            if transform_direction.vector.z == 0:
+                self.get_logger().warn("Ray is parallel to the XY plane.")
+                return
+
+            lamda = - transform_origin.point.z / transform_direction.vector.z
+            x = transform_origin.point.x + transform_direction.vector.x * lamda
+            y = transform_origin.point.y + transform_direction.vector.y * lamda
+            z = 0.0 
 
             intersection_point = PointStamped()
             intersection_point.header.frame_id = target_frame
@@ -198,8 +194,9 @@ class ImageNode(Node):
             intersection_point.point.y = y
             intersection_point.point.z = z
 
-            self.get_logger().info(f'Goal {x}, {y}, {z}')
+            self.get_logger().info(f"Intersection Point (odom): x={x}, y={y}, z={z}")
             self.point_publisher.publish(intersection_point)
+
             
 
 def main(args=None):

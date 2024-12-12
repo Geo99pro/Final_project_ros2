@@ -18,7 +18,7 @@ class MovePhysicalRobot(Node):
         self.goal_pose = None
         self.current_pose = None
 
-        self.declare_parameter('linear_gain', 0.5)
+        self.declare_parameter('linear_gain', 0.1)
         self.declare_parameter('angular_gain', 0.5)
         
         self.tf_buffer = tf2_ros.Buffer()
@@ -36,59 +36,41 @@ class MovePhysicalRobot(Node):
         if self.goal_pose is None or self.current_pose is None:
             return 
 
+        msg = PointStamped()
         goal_point = PointStamped()
         goal_point.header.frame_id = 'odom'
         goal_point.point.x = self.goal_pose.x
         goal_point.point.y = self.goal_pose.y
         goal_point.point.z = 0.0
-
+        #https://stackoverflow.com/questions/74976911/create-an-odometry-publisher-node-in-python-ros2
+        #https://github.com/pal-robotics/object_recognition_clusters/blob/master/src/object_recognition_clusters/convert_functions.py
         try:
-            # Lookup transform between 'odom' and 'base_link'
-            transform = self.tf_buffer.lookup_transform(
-                'base_link',  # Target frame
-                goal_point.header.frame_id,  # Source frame
-                rclpy.time.Time(),  # Latest transform
-                timeout=rclpy.duration.Duration(seconds=1.0)
-            )
-
-            # Transform the goal point to the 'base_link' frame
-            transformed_goal = do_transform_point(goal_point, transform)
-
-            # Calculate the distance and angle to the goal
-            euclidean_distance = sqrt(pow(transformed_goal.point.x, 2) + 
-                                    pow(transformed_goal.point.y, 2))
-
-            if euclidean_distance < 0.1:  # If within goal threshold, stop the robot
+            transformed_goal = self.tf_buffer.transform(goal_point, 'base_link', timeout=rclpy.duration.Duration(seconds=1))
+            euclidean_distance = sqrt(pow(transformed_goal.point.x, 2) + pow(transformed_goal.point.y, 2))
+            if euclidean_distance < 0.1:
+                self.get_logger().info('Goal reached')
+                #stop the robot
                 velocity_msg = TwistStamped()
                 velocity_msg.header.stamp = self.get_clock().now().to_msg()
                 velocity_msg.twist.linear.x = 0.0
                 velocity_msg.twist.angular.z = 0.0
                 self.publisher_.publish(velocity_msg)
-                self.get_logger().info('Goal reached. Stopping the robot.')
+                self.goal_pose = None   
                 return
-
             angle_to_goal = atan2(transformed_goal.point.y, transformed_goal.point.x)
 
-            # Get parameters for linear and angular gain
             linear_gain = self.get_parameter('linear_gain').get_parameter_value().double_value
             angular_gain = self.get_parameter('angular_gain').get_parameter_value().double_value
 
-            # Calculate velocity commands
-            linear_velocity = min(linear_gain * euclidean_distance, 0.2)  # Limit max linear velocity
-            angular_velocity = max(min(angular_gain * angle_to_goal, 1.0), -1.0)  # Clamp angular velocity
-
-            # Publish velocity commands
             velocity_msg = TwistStamped()
             velocity_msg.header.stamp = self.get_clock().now().to_msg()
-            velocity_msg.twist.linear.x = linear_velocity
-            velocity_msg.twist.angular.z = angular_velocity
+            velocity_msg.twist.linear.x = min(linear_gain * euclidean_distance, 0.1)
+            velocity_msg.twist.angular.z = angular_gain * angle_to_goal
+
             self.publisher_.publish(velocity_msg)
 
-            self.get_logger().info(f'Moving towards goal: distance={euclidean_distance:.2f}, angle={angle_to_goal:.2f}')
-
-        except TransformException as e:
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
             self.get_logger().warn(f"Transformation failed: {e}")
-
 
 def main(args=None):
     rclpy.init(args=args)
