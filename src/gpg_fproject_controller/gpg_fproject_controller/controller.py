@@ -7,7 +7,6 @@ from geometry_msgs.msg import TwistStamped, Pose2D, PointStamped
 
 
 class MoveRobot(Node):
-    
     """
     This class is responsible for moving the robot to a goal position
     """
