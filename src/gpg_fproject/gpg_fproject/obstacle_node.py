@@ -148,3 +148,6 @@ def main(args=None):
     rclpy.spin(obstacle_node)
     obstacle_node.destroy_node()
     rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
