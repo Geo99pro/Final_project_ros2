@@ -90,10 +90,11 @@ class ImageNode(Node):
             self.get_logger().info('Triangle detected')
         elif user_form == 'box' and approx_object_form in ['box', 'box approximation distorted']:
             self.get_logger().info('box detected')
-        elif user_form == 'circle' and approx_object_form in ['circle', 'circle approximation distorted']:
-            self.get_logger().info('Circle detected')
+        #elif user_form == 'circle' and approx_object_form in ['circle', 'circle approximation distorted']:
+        #    self.get_logger().info('Circle detected')
+        #else:
         else:
-            self.get_logger().info('Object form not treated yet')
+            self.get_logger().info('Object not detected')
             return
 
     def process_image(self, cv_image):
