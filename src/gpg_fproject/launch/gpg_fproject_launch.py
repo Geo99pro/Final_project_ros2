@@ -62,6 +62,12 @@ def generate_launch_description():
         output='screen'
     )
 
+    obstacle_node = Node(
+        package='gpg_fproject',
+        executable='obstacle_node',
+        output='screen'
+    )
+
     use_sim_time = LaunchConfiguration('use_sim_time', default='True')
 
     robot_publisher = Node(
