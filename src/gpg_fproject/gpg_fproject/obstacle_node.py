@@ -3,12 +3,11 @@ import rclpy
 import tf2_ros
 import numpy as np
 import image_geometry
+
 from rclpy.node import Node
 from std_msgs.msg import String
-from gpg_fproject.utils import get_shape
 from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge, CvBridgeError
-from std_msgs.msg import Float64MultiArray, String
 from geometry_msgs.msg import PointStamped, Vector3Stamped, TwistStamped
 
 
@@ -17,7 +16,7 @@ class ObstacleNode(Node):
         super().__init__('obstacle_node')
         self.create_subscription(Image, '/image', self.image_callback, 10)
         self.create_subscription(CameraInfo, '/camera_info', self.camera_info_callback, 10)
-        self.creat_subscription(TwistStamped, '/diff_drive_controller/cmd_vel', self.velocity_callback, 10)
+        #self.create_subscription(TwistStamped, '/diff_drive_controller/cmd_vel', self.velocity_callback, 10)
         self.pusbliher = self.create_publisher(PointStamped, '/obstacle_position', 10)
 
         
@@ -64,6 +63,10 @@ class ObstacleNode(Node):
         
         # find contours in the mask and initialize the current
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        if not contours:
+            self.get_logger().info('No contours detected from the obstacle node')
+            return
+
         max_contour = max(contours, key=cv2.contourArea)
         if contours:
             M = cv2.moments(max_contour)
@@ -143,4 +146,5 @@ def main(args=None):
     rclpy.init(args=args)
     obstacle_node = ObstacleNode()
     rclpy.spin(obstacle_node)
+    obstacle_node.destroy_node()
     rclpy.shutdown()

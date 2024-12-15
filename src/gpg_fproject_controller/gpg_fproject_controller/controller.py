@@ -18,12 +18,15 @@ class MovePhysicalRobot(Node):
         self.publisher_ = self.create_publisher(TwistStamped, '/diff_drive_controller/cmd_vel', 10)
         self.create_subscription(Odometry, '/diff_drive_controller/odom', self.pose_callback, 10)
         self.create_subscription(Pose2D, '/goal', self.goal_callback, 10)
+        self.create_subscription(PointStamped, '/obstacle_position', self.obstacle_callback, 10)
 
         self.goal_pose = None
         self.current_pose = None
+        self.obstacle_pose = None
 
         self.declare_parameter('linear_gain', 0.1)
         self.declare_parameter('angular_gain', 0.5)
+        self.declare_parameter('obstacle_threshold', 0.5)
         
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
@@ -33,6 +36,12 @@ class MovePhysicalRobot(Node):
         Callback function for the goal topic
         """
         self.goal_pose = msg
+
+    def obstacle_callback(self, msg):
+        """
+        Callback function for the obstacle topic
+        """
+        self.obstacle_pose = msg
 
     def pose_callback(self, msg):
         """
@@ -67,13 +76,36 @@ class MovePhysicalRobot(Node):
         goal_point.point.x = self.goal_pose.x
         goal_point.point.y = self.goal_pose.y
         goal_point.point.z = 0.0
+
+        #obstacle_point = PointStamped()
+        #obstacle_point.header.frame_id = 'odom'
+        #obstacle_point.point.x = self.obstacle_pose.point.x
+        #obstacle_point.point.y = self.obstacle_pose.point.y
+        #obstacle_point.point.z = 0.0
         
         try:
             transformed_goal = self.tf_buffer.transform(goal_point, 'base_link', timeout=rclpy.duration.Duration(seconds=1))
             euclidean_distance = sqrt(pow(transformed_goal.point.x, 2) + pow(transformed_goal.point.y, 2))
             self.stop_robot(euclidean_distance)
-
+            
             angle_to_goal = atan2(transformed_goal.point.y, transformed_goal.point.x)
+
+            if self.obstacle_pose:
+                transformed_obstacle = self.tf_buffer.transform(self.obstacle_pose, 'base_link', timeout=rclpy.duration.Duration(seconds=1))
+                obstacle_distance = sqrt(pow(transformed_obstacle.point.x, 2) + pow(transformed_obstacle.point.y, 2))
+                obstacle_threshold = self.get_parameter('obstacle_threshold').get_parameter_value().double_value
+
+                if obstacle_distance < obstacle_threshold:
+                    self.get_logger().info('Obstacle detected')
+                    avoid_direction = -1 if transformed_obstacle.point.y > 0 else 1
+                    angular_gain = self.get_parameter('angular_gain').get_parameter_value().double_value
+                    velocity_msg = TwistStamped()
+                    velocity_msg.header.stamp = self.get_clock().now().to_msg()
+                    velocity_msg.twist.linear.x = 0.0
+                    velocity_msg.twist.angular.z = angular_gain * avoid_direction
+                    self.publisher_.publish(velocity_msg)
+                    return
+                
             linear_gain = self.get_parameter('linear_gain').get_parameter_value().double_value
             angular_gain = self.get_parameter('angular_gain').get_parameter_value().double_value
 
