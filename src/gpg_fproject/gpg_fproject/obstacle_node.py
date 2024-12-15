@@ -16,11 +16,11 @@ class ObstacleNode(Node):
         super().__init__('obstacle_node')
         self.create_subscription(Image, '/image', self.image_callback, 10)
         self.create_subscription(CameraInfo, '/camera_info', self.camera_info_callback, 10)
-        #self.create_subscription(TwistStamped, '/diff_drive_controller/cmd_vel', self.velocity_callback, 10)
-        self.pusbliher = self.create_publisher(PointStamped, '/obstacle_position', 10)
+        self.pusbliher_ = self.create_publisher(PointStamped, '/obstacle_position', 10)
 
         
         self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
         self.bridge = CvBridge()
         self.camera_model = image_geometry.PinholeCameraModel()
         self.camera_info = None
