@@ -91,7 +91,7 @@ class MovePhysicalRobot(Node):
             angle_to_goal = atan2(transformed_goal.point.y, transformed_goal.point.x)
 
             base_angvel = 0
-            if self.obstacle_pose and (self.get_clock().now().to_msg() - self.obstacle_pose.header.stamp) < 0.5:
+            if self.obstacle_pose and (self.get_clock().now().to_msg() - self.obstacle_pose.header.stamp) < 0.5 :
                 transformed_obstacle = self.tf_buffer.transform(self.obstacle_pose, 'base_link', timeout=rclpy.duration.Duration(seconds=1))
                 obstacle_distance = sqrt(pow(transformed_obstacle.point.x, 2) + pow(transformed_obstacle.point.y, 2))
                 obstacle_threshold = self.get_parameter('obstacle_threshold').get_parameter_value().double_value
