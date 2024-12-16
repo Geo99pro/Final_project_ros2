@@ -74,11 +74,11 @@ def get_shape(img: str, mask: np.array, eps: float, user_form: str):
             object_form = "box approximation distorted"
         break
 
-    while user_form > 4:
-        if num_points > 4:
-            object_form = "circle"
-        else:
-            object_form = "circle approximation distorted"
-        break
+    #while user_form > "circle":
+    #    if num_points > 4:
+    #        object_form = "circle"
+    #    else:
+    #        object_form = "circle approximation distorted"
+    #    break
     
     return cnts, object_form, max_contours, text, coords #coords as tuple (x, y, w, h)

@@ -8,6 +8,8 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import PointStamped, Vector3Stamped, TwistStamped
+from tf2_geometry_msgs import do_transform_point
+
 
 
 class ObstacleNode(Node):
@@ -15,7 +17,7 @@ class ObstacleNode(Node):
         super().__init__('obstacle_node')
         self.create_subscription(Image, '/image', self.image_callback, 10)
         self.create_subscription(CameraInfo, '/camera_info', self.camera_info_callback, 10)
-        self.pusbliher_ = self.create_publisher(PointStamped, '/obstacle_position', 10)
+        self.publisher_ = self.create_publisher(PointStamped, '/obstacle_position', 10)
 
         
         self.tf_buffer = tf2_ros.Buffer()
@@ -23,8 +25,7 @@ class ObstacleNode(Node):
         self.bridge = CvBridge()
         self.camera_model = image_geometry.PinholeCameraModel()
         self.camera_info = None
-        self.velocity = None
-    
+
     def camera_info_callback(self, msg):
         """
         Callback function for the camera info topic
@@ -107,24 +108,22 @@ class ObstacleNode(Node):
 
         target_frame = 'odom'
         try:
-            transformed_origin = self.tf_buffer(origin, 
-                                                target_frame, 
-                                                timeout=rclpy.duration.Duration(seconds=2.0))
-            transformed_direction = self.tf_buffer.transform(direction, target_frame, timeout=rclpy.duration.Duration(seconds=1))
-            #self.get_logger().info(f'Transformed origin: {transformed_origin}')
-            #self.get_logger().info(f'Transformed direction: {transformed_direction}')
+                transform_origin = self.tf_buffer.transform(origin, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
+                transform_direction = self.tf_buffer.transform(
+                    direction, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
             self.get_logger().warn(f"Transformation failed: {e}")
             return
-        
-        if transformed_direction.vector == 0:
-            self.get_logger().info("Ray is parallel to the XY plane.")
+
+        if transform_direction.vector.z == 0:
+            self.get_logger().warn("Ray is parallel to the XY plane.")
             return
+
         
-        lambda_ = -transformed_origin.point.z / transformed_direction.vector.z
-        x = transformed_origin.point.x + lambda_ * transformed_direction.vector.x
-        y = transformed_origin.point.y + lambda_ * transformed_direction.vector.y
-        z = 0.0
+        lamda = - transform_origin.point.z / transform_direction.vector.z
+        x = transform_origin.point.x + transform_direction.vector.x * lamda
+        y = transform_origin.point.y + transform_direction.vector.y * lamda
+        z = 0.0 
 
         intersection_point = PointStamped()
         intersection_point.header.frame_id = target_frame
