@@ -90,21 +90,17 @@ class MovePhysicalRobot(Node):
             
             angle_to_goal = atan2(transformed_goal.point.y, transformed_goal.point.x)
 
-            if self.obstacle_pose:
+            base_angvel = 0
+            if self.obstacle_pose and (self.get_clock().now().to_msg() - self.obstacle_pose.header.stamp) < 0.5:
                 transformed_obstacle = self.tf_buffer.transform(self.obstacle_pose, 'base_link', timeout=rclpy.duration.Duration(seconds=1))
                 obstacle_distance = sqrt(pow(transformed_obstacle.point.x, 2) + pow(transformed_obstacle.point.y, 2))
                 obstacle_threshold = self.get_parameter('obstacle_threshold').get_parameter_value().double_value
 
                 if obstacle_distance < obstacle_threshold:
                     self.get_logger().info('Obstacle detected')
-                    avoid_direction = -1 if transformed_obstacle.point.y > 0 else 1
+                    avoid_direction = -1 if self.obstacle_pose.point.y > 0 else 1
                     angular_gain = self.get_parameter('angular_gain').get_parameter_value().double_value
-                    velocity_msg = TwistStamped()
-                    velocity_msg.header.stamp = self.get_clock().now().to_msg()
-                    velocity_msg.twist.linear.x = 0.0
-                    velocity_msg.twist.angular.z = angular_gain * avoid_direction
-                    self.publisher_.publish(velocity_msg)
-                    return
+                    base_angvel = angular_gain * avoid_direction
                 
             linear_gain = self.get_parameter('linear_gain').get_parameter_value().double_value
             angular_gain = self.get_parameter('angular_gain').get_parameter_value().double_value
@@ -112,7 +108,7 @@ class MovePhysicalRobot(Node):
             velocity_msg = TwistStamped()
             velocity_msg.header.stamp = self.get_clock().now().to_msg()
             velocity_msg.twist.linear.x = min(linear_gain * euclidean_distance, 0.1)
-            velocity_msg.twist.angular.z = angular_gain * angle_to_goal
+            velocity_msg.twist.angular.z = angular_gain * angle_to_goal + base_angvel
 
             self.publisher_.publish(velocity_msg)
 
