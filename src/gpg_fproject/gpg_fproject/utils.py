@@ -14,12 +14,13 @@ def get_hsv_value_based_on_click(image_path):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def pick_color(event, x, y):
+def pick_color(event, x, y, flags, param):
     """
     This function is used to get the HSV value of a pixel in an image by clicking on the pixel"""
     if event == cv2.EVENT_LBUTTONDOWN:
         hsv_value = image_hsv[y, x]
         print(f"HSV Value at ({x}, {y}): {hsv_value}")
+
 
 def get_shape(img: str, mask: np.array, eps: float, user_form: str):
     """

@@ -14,8 +14,8 @@ class UserNode(Node):
         self.timer = self.create_timer(timer_period, self.user_callback)
 
     def user_callback(self):
-        color_input = "black" #input('Enter a color. Color should be between [blue, red, green, yellow]: ')
-        form_input = "triangle" #input('Enter a form. Form should be between [box, triangle, circle]: ')
+        color_input = "blue" #input('Enter a color. Color should be between [blue, red, green, yellow]: ')
+        form_input = "box" #input('Enter a form. Form should be between [box, triangle, circle]: ')
         color_info = self.get_user_color(color_input)
         form_info = self.get_user_form(form_input)
         self.user_publisher.publish(color_info)

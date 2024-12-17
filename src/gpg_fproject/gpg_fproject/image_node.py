@@ -66,10 +66,11 @@ class ImageNode(Node):
 
     def get_hsv_limit(self, user_color):
         """
-        Function to get the HSV limits for the color asked by the user"""
+        Function to get the HSV limits for the color asked by the user
+        """
         if user_color=='blue':
-            lower_hsv = np.array([100, 150, 50])
-            upper_hsv = np.array([140, 255, 255])
+            lower_hsv = np.array([120, 253, 103])
+            upper_hsv = np.array([120, 253, 103])
         elif user_color=='red':
             lower_hsv = np.array([0, 145, 200])
             upper_hsv = np.array([0, 145, 200])
