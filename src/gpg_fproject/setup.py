@@ -16,6 +16,7 @@ setup(
         ('share/' + package_name, ['gpg_fproject/robot.urdf']),
         ('share/' + package_name, ['gpg_fproject/image_node.py']),
         ('share/' + package_name, ['gpg_fproject/obstacle_node.py']),
+        ('share/' + package_name, ['gpg_fproject/obstacle_memory.py']),
         ('share/' + package_name, ['gpg_fproject/user_node.py']),
         ('share/' + package_name, ['gpg_fproject/utils.py']),
     ],
