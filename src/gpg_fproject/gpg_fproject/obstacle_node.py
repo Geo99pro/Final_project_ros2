@@ -7,7 +7,7 @@ import image_geometry
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge, CvBridgeError
-from geometry_msgs.msg import PointStamped, Vector3Stamped, TwistStamped
+from geometry_msgs.msg import PointStamped, Vector3Stamped
 from tf2_geometry_msgs import do_transform_point
 
 
@@ -19,7 +19,6 @@ class ObstacleNode(Node):
         self.create_subscription(CameraInfo, '/camera_info', self.camera_info_callback, 10)
         self.publisher_ = self.create_publisher(PointStamped, '/obstacle_position', 10)
 
-        
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
         self.bridge = CvBridge()
@@ -47,7 +46,7 @@ class ObstacleNode(Node):
         except CvBridgeError as e:
             self.get_logger().error(f'CvBridge Error: {e}')
             return
-        
+
     def process_image(self, cv_image):
         """
         Process the image to detect obstacles
@@ -61,24 +60,20 @@ class ObstacleNode(Node):
             self.get_logger().info('No red color detected from the obstacle node')
             return
         
-        # find contours in the mask and initialize the current
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         if not contours:
             self.get_logger().info('No contours detected from the obstacle node')
             return
 
-        max_contour = max(contours, key=cv2.contourArea)
-        if contours:
-            M = cv2.moments(max_contour)
-            if M["m00"] != 0:
-                cX = int(M["m10"] / M["m00"])
-                cY = int(M["m01"] / M["m00"])
-
-            bottom_point = tuple(max_contour[max_contour[:, :, 1].argmax()][0])
+        for contour in contours:
+            M = cv2.moments(contour)
+            if M["m00"] == 0:
+                continue
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            bottom_point = tuple(contour[contour[:, :, 1].argmax()][0])
             bottom_point = (cX, bottom_point[1])
             self.publish_obstacle_position(cv_image, bottom_point, cX, cY)
-            #else:
-                #self.get_logger().info('No obstacle detected from the obstacle node')
 
     def publish_obstacle_position(self, cv_image, bottom_point, x, y):
         """
