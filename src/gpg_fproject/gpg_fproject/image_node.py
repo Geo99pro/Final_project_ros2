@@ -11,7 +11,6 @@ from std_msgs.msg import Float64MultiArray, String
 from gpg_fproject.utils import get_shape
 from geometry_msgs.msg import PointStamped, Vector3Stamped
 from tf2_geometry_msgs import do_transform_point
-from gpg_fproject.utils import get_hsv_value_based_on_click
 
 class ImageNode(Node):
     def __init__(self):
