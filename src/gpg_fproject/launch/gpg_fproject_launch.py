@@ -68,6 +68,12 @@ def generate_launch_description():
         output='screen'
     )
 
+    obstacle_memory_node = Node(
+        package='gpg_fproject',
+        executable='obstacle_memory_node',
+        output='screen'
+    )
+
     use_sim_time = LaunchConfiguration('use_sim_time', default='True')
 
     robot_publisher = Node(
@@ -128,6 +134,7 @@ def generate_launch_description():
             controller_node,
             reach_goal_node,
             obstacle_node,
+            obstacle_memory_node,
             image_bridge_node,
             robot_publisher, 
             sim_node, 
