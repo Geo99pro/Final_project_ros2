@@ -30,7 +30,8 @@ setup(
     entry_points={
         'console_scripts': [ 'image_node = gpg_fproject.image_node:main',
                                 'user_node = gpg_fproject.user_node:main',
-                                'obstacle_node = gpg_fproject.obstacle_node:main'
+                                'obstacle_node = gpg_fproject.obstacle_node:main',
+                                'obstacle_memory_node = gpg_fproject.obstacle_memory_node:main'
         ],
     },
 )
