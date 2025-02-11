@@ -47,20 +47,19 @@ class ObstacleNode(Node):
         except CvBridgeError as e:
             self.get_logger().error(f'CvBridge Error: {e}')
             return
-        
+
     def process_image(self, cv_image):
         """
         Process the image to detect obstacles
         """
         hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
-
         lower_red = np.array([0, 100, 100])
         upper_red = np.array([10, 255, 255])
         mask = cv2.inRange(hsv_image, lower_red, upper_red)
         if np.all(mask == 0):
             self.get_logger().info('No red color detected from the obstacle node')
             return
-        
+
         # find contours in the mask and initialize the current
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         if not contours:
