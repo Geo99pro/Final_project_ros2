@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-#import imutils
 
 def get_hsv_value_based_on_click(image_path):
     """
