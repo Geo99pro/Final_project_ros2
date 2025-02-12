@@ -12,7 +12,7 @@ class ObstacleMemoryNode(Node):
         self.obstacle_publishers = {} 
 
         self.memory_size = 5
-        self.duplicate_threshold = 0.01
+        self.duplicate_threshold = 0.001
         self.x_coords, self.y_coords, self.z_coords = [], [], []
 
     def obstacle_callback(self, msg):
@@ -61,24 +61,24 @@ class ObstacleMemoryNode(Node):
         
         float_array = np.array(obstacle_msg.float_storage)
         if float_array.size % 3 == 0:
-            arraye_format = float_array.reshape(-1, 3)
+            array_format = float_array.reshape(-1, 3)
+            for i, obs_coords in enumerate(array_format):
+                self.get_logger().info(f'Obstacle {i} position: {obs_coords}')
+                topic_name = f'/obstacle_position_{i}'
+                if topic_name not in self.obstacle_publishers:
+                    self.obstacle_publishers[topic_name] = self.create_publisher(PointStamped, topic_name, 10)
+                PS = PointStamped()
+                PS.header.stamp = self.get_clock().now().to_msg()
+                PS.header.frame_id = ''
+                PS.point.x, PS.point.y, PS.point.z = obs_coords
+                try:
+                    self.obstacle_publishers[topic_name].publish(PS)
+                    self.get_logger().info(f'Obstacle {i} published. Well done buddy!')
+                except Exception as e:
+                    self.get_logger().error(f'Error publishing obstacle to topic {topic_name}: {e} ! Check it out!')
         else:
             self.get_logger().error('Obstacle memory storage has incorrect shape!')
-            return
-
-        for i, obs_coords in enumerate(arraye_format): 
-            topic_name = f'/obstacle_position_{i}'
-            if topic_name not in self.obstacle_publishers:
-                self.obstacle_publishers[topic_name] = self.create_publisher(PointStamped, topic_name, 10)
-            
-            PS = PointStamped()
-            PS.header.stamp = self.get_clock().now().to_msg()
-            PS.point.x, PS.point.y, PS.point.z = obs_coords
-
-            try:
-                self.obstacle_publishers[topic_name].publish(PS)
-            except Exception as e:
-                self.get_logger().error(f'Error publishing obstacle to topic {topic_name}: {e}')           
+            return        
 
 def main(args=None):
     rclpy.init(args=args)
@@ -86,3 +86,6 @@ def main(args=None):
     rclpy.spin(obstacle_memory_node)
     obstacle_memory_node.destroy_node()
     rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
