@@ -1,16 +1,16 @@
 import cv2
 import rclpy
+import tf2_ros  
 import numpy as np
 import image_geometry
 
 from rclpy.node import Node
-from sensor_msgs.msg import Image, CameraInfo
-import tf2_ros  
-from cv_bridge import CvBridge, CvBridgeError
-from std_msgs.msg import Float64MultiArray, String
 from gpg_fproject.utils import get_shape
-from geometry_msgs.msg import PointStamped, Vector3Stamped
+from sensor_msgs.msg import Image, CameraInfo
+from cv_bridge import CvBridge, CvBridgeError
 from tf2_geometry_msgs import do_transform_point
+from std_msgs.msg import Float64MultiArray, String
+from geometry_msgs.msg import PointStamped, Vector3Stamped
 
 class ImageNode(Node):
     def __init__(self):
@@ -23,8 +23,8 @@ class ImageNode(Node):
         self.color_subscription = self.create_subscription(String, '/object_color', self.color_callback, 10)
         self.form_subscription = self.create_subscription(String, '/object_form', self.form_callback, 10)
 
-        self.tf_buffer = tf2_ros.Buffer()
         self.bridge = CvBridge()
+        self.tf_buffer = tf2_ros.Buffer()
         self.camera_model = image_geometry.PinholeCameraModel()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
         self.current_servo_position = 0.0
@@ -93,7 +93,7 @@ class ImageNode(Node):
         #    self.get_logger().info('Circle detected')
         #else:
         else:
-            self.get_logger().info('Object not detected')
+            self.get_logger().info('No object detected')
             return
 
     def process_image(self, cv_image):
@@ -140,16 +140,13 @@ class ImageNode(Node):
 
             bottom_point = tuple(max_contours[max_contours[:, :, 1].argmax()][0])
             bottom_point = [cX, bottom_point[1]]
-            #self.get_logger().info(f'Bottom point of the object: {bottom_point}')
 
             cv2.circle(cv_image, bottom_point, 5, (255, 0, 0), -1)
-            cv2.putText(cv_image, "Bottom Point", (bottom_point[0] - 25, bottom_point[1] - 25),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+            cv2.putText(cv_image, "Bottom Point", (bottom_point[0] - 25, bottom_point[1] - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
             
             cv2.drawContours(cv_image, [max_contours], -1, (0, 255, 0), 3)
             cv2.putText(cv_image, text, (coords[0], coords[1] - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-            cv2.putText(cv_image, "centroid", (cX - 25, cY - 25),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+            cv2.putText(cv_image, "centroid", (cX - 25, cY - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
             cv2.circle(cv_image, (cX, cY), 5, (255, 255, 255), -1)
             
             cv2.imshow("Original Image", cv_image)
@@ -164,6 +161,9 @@ class ImageNode(Node):
             origin = PointStamped()
             origin.header.frame_id = "camera_link"
             origin.header.stamp = self.get_clock().now().to_msg()
+            origin.point.x = 0.0
+            origin.point.y = 0.0
+            origin.point.z = 0.0
 
             direction = Vector3Stamped()
             direction.header.frame_id = "camera_link"
@@ -175,20 +175,22 @@ class ImageNode(Node):
             target_frame = "odom"
 
             try:
-                transform_origin = self.tf_buffer.transform(origin, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
-                transform_direction = self.tf_buffer.transform(direction, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
-            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
-                self.get_logger().warn(f"Transformation failed: {e}")
-                return
+                transform_origin = self.tf_buffer.transform(
+                        origin, target_frame, timeout=rclpy.duration.Duration(seconds=1.0))
+                transform_direction = self.tf_buffer.transform(
+                        direction, target_frame, timeout=rclpy.duration.Duration(seconds=1.0))
+            except Exception as e:
+                    self.get_logger().warn(f"Transformation failed: {e}")
+                    return
 
-            if transform_direction.vector.z == 0:
-                self.get_logger().warn("Ray is parallel to the XY plane.")
-                return
+            #if transform_direction.vector.z == 0:
+            #    self.get_logger().warn("Ray is parallel to the XY plane.")
+            #    return
 
             lamda = - transform_origin.point.z / transform_direction.vector.z
             x = transform_origin.point.x + transform_direction.vector.x * lamda
             y = transform_origin.point.y + transform_direction.vector.y * lamda
-            z = 0.0 
+            z = transform_origin.point.z + transform_direction.vector.z * lamda
 
             intersection_point = PointStamped()
             intersection_point.header.frame_id = target_frame
