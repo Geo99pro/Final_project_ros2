@@ -130,7 +130,7 @@ class ObstacleNode(Node):
         self.get_logger().info(f"Intersection Point of the obstacle (odom): x={x}, y={y}, z={z}")
         self.publisher_.publish(intersection_point)
         #verify if intersection point is published
-        self.get_logger().info(f'Published obstacle position: x={x:.2f}, y={y:.2f}, z={z:.2f}')
+        self.get_logger().info(f'Intersection obstacle node published.')
 
 
 def main(args=None):
