@@ -101,7 +101,7 @@ class ObstacleNode(Node):
         direction.vector.y = ray[1]
         direction.vector.z = ray[2]
 
-        target_frame = 'odom'
+        target_frame = "odom"
         try:
                 transform_origin = self.tf_buffer.transform(origin, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
                 transform_direction = self.tf_buffer.transform(direction, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
