@@ -163,11 +163,11 @@ class ImageNode(Node):
 
             origin = PointStamped()
             origin.header.frame_id = "camera_link"
-            origin.header.stamp = rclpy.time.Time().to_msg()
+            origin.header.stamp = self.get_clock().now().to_msg()
 
             direction = Vector3Stamped()
             direction.header.frame_id = "camera_link"
-            direction.header.stamp = rclpy.time.Time().to_msg()
+            direction.header.stamp = self.get_clock().now().to_msg()
             direction.vector.x = ray[0]
             direction.vector.y = ray[1]
             direction.vector.z = ray[2]
@@ -175,10 +175,8 @@ class ImageNode(Node):
             target_frame = "odom"
 
             try:
-                transform_origin = self.tf_buffer.transform(
-                    origin, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
-                transform_direction = self.tf_buffer.transform(
-                    direction, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
+                transform_origin = self.tf_buffer.transform(origin, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
+                transform_direction = self.tf_buffer.transform(direction, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
             except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
                 self.get_logger().warn(f"Transformation failed: {e}")
                 return
