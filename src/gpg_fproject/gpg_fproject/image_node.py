@@ -165,15 +165,15 @@ class ImageNode(Node):
             self.get_logger().info(f"Ray direction: {ray}")
 
             origin = PointStamped()
-            origin.header.frame_id = "camera_link"
             origin.header.stamp = self.get_clock().now().to_msg()
+            origin.header.frame_id = "camera_link"
             origin.point.x = 0.0
             origin.point.y = 0.0
             origin.point.z = 0.0
 
             direction = Vector3Stamped()
-            direction.header.frame_id = "camera_link"
             direction.header.stamp = self.get_clock().now().to_msg()
+            direction.header.frame_id = "camera_link"
             direction.vector.x = ray[0]
             direction.vector.y = ray[1]
             direction.vector.z = ray[2]
@@ -199,14 +199,16 @@ class ImageNode(Node):
             z = transform_origin.point.z + transform_direction.vector.z * lamda
 
             intersection_point = PointStamped()
-            intersection_point.header.frame_id = target_frame
             intersection_point.header.stamp = self.get_clock().now().to_msg()
+            intersection_point.header.frame_id = target_frame
             intersection_point.point.x = x
             intersection_point.point.y = y
             intersection_point.point.z = z
 
             self.get_logger().info(f"Intersection Point (odom): x={x}, y={y}, z={z}")
             self.point_publisher.publish(intersection_point)
+            #verify that intersection point is published
+            self.get_logger().info('Intersection image node published.')
 
 def main(args=None):
     """
