@@ -12,7 +12,6 @@ from geometry_msgs.msg import PointStamped, Vector3Stamped
 from tf2_geometry_msgs import do_transform_point
 
 
-
 class ObstacleNode(Node):
     def __init__(self):
         super().__init__('obstacle_node')
@@ -22,6 +21,7 @@ class ObstacleNode(Node):
 
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+
         self.bridge = CvBridge()
         self.camera_model = image_geometry.PinholeCameraModel()
         self.camera_info = None
@@ -61,39 +61,40 @@ class ObstacleNode(Node):
             self.get_logger().info('No red color detected from the obstacle node')
             return
         
-        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         if not contours:
             self.get_logger().info('No contours detected from the obstacle node')
             return
 
         for contour in contours:
             M = cv2.moments(contour)
-            if M["m00"] == 0:
-                continue
-            cX = int(M["m10"] / M["m00"])
-            cY = int(M["m01"] / M["m00"])
-            bottom_point = tuple(contour[contour[:, :, 1].argmax()][0])
-            bottom_point = (cX, bottom_point[1])
-            self.publish_obstacle_position(cv_image, bottom_point, cX, cY)
+            if M["m00"] != 0:
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                bottom_point = tuple(contour[contour[:, :, 1].argmax()][0])
+                bottom_point = (cX, bottom_point[1])
+                self.publish_obstacle_position(cv_image, bottom_point, cX, cY)
 
     def publish_obstacle_position(self, cv_image, bottom_point, x, y):
         """
         Publish the position of the obstacle
         """
         cv2.circle(cv_image, bottom_point, 5, (255, 0, 0), -1)
-        cv2.putText(cv_image, "obstacle bottom Point", (bottom_point[0] - 25, bottom_point[1] - 25),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-        cv2.putText(cv_image, "centroid", (x - 25, y - 25),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        cv2.putText(cv_image, "obstacle bottom Point", (bottom_point[0] - 25, bottom_point[1] - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+        cv2.putText(cv_image, "centroid", (x - 25, y - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
         cv2.circle(cv_image, (x, y), 5, (255, 255, 255), -1)
         cv2.imshow("Original Image", cv_image)
         cv2.waitKey(1)
         
         ray = self.camera_model.projectPixelTo3dRay(bottom_point)
         self.get_logger().info(f'Obstacle ray direction: {ray}')
+
         origin = PointStamped()
         origin.header.stamp = self.get_clock().now().to_msg()
         origin.header.frame_id = 'camera_link'
+        origin.point.x = 0.0
+        origin.point.y = 0.0
+        origin.point.z = 0.0
 
         direction = Vector3Stamped()
         direction.header.stamp = self.get_clock().now().to_msg()
@@ -114,11 +115,10 @@ class ObstacleNode(Node):
             self.get_logger().warn("Ray is parallel to the XY plane.")
             return
 
-        
         lamda = - transform_origin.point.z / transform_direction.vector.z
         x = transform_origin.point.x + transform_direction.vector.x * lamda
         y = transform_origin.point.y + transform_direction.vector.y * lamda
-        z = 0.0 
+        z = transform_origin.point.z + transform_direction.vector.z * lamda
 
         intersection_point = PointStamped()
         intersection_point.header.frame_id = target_frame
@@ -129,7 +129,8 @@ class ObstacleNode(Node):
 
         self.get_logger().info(f"Intersection Point of the obstacle (odom): x={x}, y={y}, z={z}")
         self.publisher_.publish(intersection_point)
-
+        #verify if intersection point is published
+        self.get_logger().info(f'Published obstacle position: x={x:.2f}, y={y:.2f}, z={z:.2f}')
 
 
 def main(args=None):
