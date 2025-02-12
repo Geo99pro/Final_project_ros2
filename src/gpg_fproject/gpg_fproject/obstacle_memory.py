@@ -2,6 +2,7 @@ import rclpy
 import numpy as np
 from rclpy.node import Node
 from geometry_msgs.msg import PointStamped
+from std_msgs.msg import Int32
 from custom_msg_fproject.msg import UnboundedFloat
 
 class ObstacleMemoryNode(Node):
@@ -9,6 +10,7 @@ class ObstacleMemoryNode(Node):
         super().__init__('obstacle_memory_node')
         self.create_subscription(PointStamped, '/obstacle_position', self.obstacle_callback, 10)
         self.memory_publisher = self.create_publisher(UnboundedFloat, '/obstacle_memory', 10)
+        self.memory_size_publisher = self.create_publisher(Int32, '/obstacle_memory_size', 10)
         self.obstacle_publishers = {} 
 
         self.memory_size = 5
@@ -71,9 +73,13 @@ class ObstacleMemoryNode(Node):
                 PS.header.stamp = self.get_clock().now().to_msg()
                 PS.header.frame_id = "odom"
                 PS.point.x, PS.point.y, PS.point.z = obs_coords
+                memo_size = Int32()
+                memo_size.data = self.memory_size
                 try:
                     self.obstacle_publishers[topic_name].publish(PS)
+                    self.memory_size_publisher.publish(memo_size)
                     self.get_logger().info(f'Obstacle {i} published. Well done buddy!')
+                    self.logger.info(f'Obstacle memory size: {self.memory_size}')
                 except Exception as e:
                     self.get_logger().error(f'Error publishing obstacle to topic {topic_name}: {e} ! Check it out!')
         else:
