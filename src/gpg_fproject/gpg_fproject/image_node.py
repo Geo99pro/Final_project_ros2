@@ -98,7 +98,7 @@ class ImageNode(Node):
 
     def process_image(self, cv_image):
         """
-        Function to process the image and detect the object
+        Function to process the image and detect the goal object
         
         Args:
 
@@ -115,7 +115,7 @@ class ImageNode(Node):
         lower_hsv, upper_hsv = self.get_hsv_limit(user_color)
         mask = cv2.inRange(hsv_img, lower_hsv, upper_hsv)
         if np.all(mask == 0):
-            self.get_logger().info('No object detected')
+            self.get_logger().info('No goal object detected')
             return
         
         contours, approx_object_form, max_contours, text, coords = get_shape(cv_image, mask, 0.04, user_form)
@@ -192,7 +192,7 @@ class ImageNode(Node):
 
             intersection_point = PointStamped()
             intersection_point.header.frame_id = target_frame
-            intersection_point.header.stamp = rclpy.time.Time().to_msg()
+            intersection_point.header.stamp = self.get_clock().now().to_msg()
             intersection_point.point.x = x
             intersection_point.point.y = y
             intersection_point.point.z = z
