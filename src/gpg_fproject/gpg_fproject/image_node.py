@@ -174,7 +174,6 @@ class ImageNode(Node):
 
             target_frame = "odom"
 
-            # Transform origin and direction to odom frame
             try:
                 transform_origin = self.tf_buffer.transform(
                     origin, target_frame, timeout=rclpy.duration.Duration(seconds=2.0))
