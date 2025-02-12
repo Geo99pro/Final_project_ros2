@@ -69,7 +69,7 @@ class ObstacleMemoryNode(Node):
                     self.obstacle_publishers[topic_name] = self.create_publisher(PointStamped, topic_name, 10)
                 PS = PointStamped()
                 PS.header.stamp = self.get_clock().now().to_msg()
-                PS.header.frame_id = ''
+                PS.header.frame_id = "odom"
                 PS.point.x, PS.point.y, PS.point.z = obs_coords
                 try:
                     self.obstacle_publishers[topic_name].publish(PS)
