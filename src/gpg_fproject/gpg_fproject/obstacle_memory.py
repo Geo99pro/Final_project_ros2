@@ -12,7 +12,7 @@ class ObstacleMemoryNode(Node):
         self.obstacle_publishers = {} 
 
         self.memory_size = 5
-        self.duplicate_threshold = 0.001
+        self.duplicate_threshold = 0.05
         self.x_coords, self.y_coords, self.z_coords = [], [], []
 
     def obstacle_callback(self, msg):
