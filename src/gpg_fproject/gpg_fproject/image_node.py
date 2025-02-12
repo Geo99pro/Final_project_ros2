@@ -172,7 +172,7 @@ class ImageNode(Node):
             direction.vector.y = ray[1]
             direction.vector.z = ray[2]
 
-            target_frame = 'odom'
+            target_frame = "odom"
 
             # Transform origin and direction to odom frame
             try:
