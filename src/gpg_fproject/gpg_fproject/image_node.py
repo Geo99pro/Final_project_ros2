@@ -23,11 +23,13 @@ class ImageNode(Node):
         self.color_subscription = self.create_subscription(String, '/object_color', self.color_callback, 10)
         self.form_subscription = self.create_subscription(String, '/object_form', self.form_callback, 10)
 
-        self.bridge = CvBridge()
         self.tf_buffer = tf2_ros.Buffer()
-        self.camera_model = image_geometry.PinholeCameraModel()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+
+        self.bridge = CvBridge()
+        self.camera_model = image_geometry.PinholeCameraModel()
         self.current_servo_position = 0.0
+
         self.camera_info = None
         self.user_color = None
         self.user_form = None
@@ -65,7 +67,11 @@ class ImageNode(Node):
 
     def get_hsv_limit(self, user_color):
         """
-        Function to get the HSV limits for the color asked by the user"""
+        Function to get the HSV limits for the color asked by the user
+        
+        Args:
+            user_color: The color asked by the user
+        """
         if user_color=='blue':
             lower_hsv = np.array([100, 150, 50])
             upper_hsv = np.array([140, 255, 255])
@@ -201,8 +207,6 @@ class ImageNode(Node):
 
             self.get_logger().info(f"Intersection Point (odom): x={x}, y={y}, z={z}")
             self.point_publisher.publish(intersection_point)
-
-            
 
 def main(args=None):
     """
