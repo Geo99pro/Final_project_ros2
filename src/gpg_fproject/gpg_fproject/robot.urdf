@@ -4,10 +4,11 @@
   <!-- ROS2 Control Configuration -->
   <gazebo>
     <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="gz_ros2_control-system">
-        <parameters>$(find gpg_fproject)/controllers.yaml</parameters>
+      <parameters>$(find gpg_fproject)/controllers.yaml</parameters>
     </plugin>
   </gazebo>
 
+  
   <ros2_control name="GazeboSimSystem" type="system">
     <hardware>
       <plugin>gz_ros2_control/GazeboSimSystem</plugin>
