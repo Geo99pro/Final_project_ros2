@@ -70,7 +70,7 @@ def generate_launch_description():
 
     obstacle_memory_node = Node(
         package='gpg_fproject',
-        executable='obstacle_memory_node',
+        executable='obstacle_memory',
         output='screen'
     )
 
