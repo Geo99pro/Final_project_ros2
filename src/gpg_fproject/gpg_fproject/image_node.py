@@ -11,6 +11,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from tf2_geometry_msgs import do_transform_point
 from std_msgs.msg import Float64MultiArray, String
 from geometry_msgs.msg import PointStamped, Vector3Stamped
+from rclpy.time import Time
 
 class ImageNode(Node):
     def __init__(self):
@@ -165,14 +166,14 @@ class ImageNode(Node):
             self.get_logger().info(f"**Goal object Ray direction: {ray}**")
 
             origin = PointStamped()
-            origin.header.stamp = self.get_clock().now().to_msg()
+            #origin.header.stamp = self.get_clock().now().to_msg()
             origin.header.frame_id = "camera_link"
             origin.point.x = 0.0
             origin.point.y = 0.0
             origin.point.z = 0.0
 
             direction = Vector3Stamped()
-            direction.header.stamp = self.get_clock().now().to_msg()
+            #direction.header.stamp = self.get_clock().now().to_msg()
             direction.header.frame_id = "camera_link"
             direction.vector.x = ray[0]
             direction.vector.y = ray[1]
@@ -181,17 +182,15 @@ class ImageNode(Node):
             target_frame = "odom"
 
             try:
-                transform_origin = self.tf_buffer.transform(
-                        origin, target_frame, timeout=rclpy.duration.Duration(seconds=1.0))
-                transform_direction = self.tf_buffer.transform(
-                        direction, target_frame, timeout=rclpy.duration.Duration(seconds=1.0))
+                transform_origin = self.tf_buffer.transform(origin, target_frame, timeout=rclpy.duration.Duration(seconds=1.0))
+                transform_direction = self.tf_buffer.transform(direction, target_frame, timeout=rclpy.duration.Duration(seconds=1.0))   
             except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
                     self.get_logger().warn(f"Transformation failed: {e}")
                     return
 
-            #if transform_direction.vector.z == 0:
-            #    self.get_logger().warn("Ray is parallel to the XY plane.")
-            #    return
+            if transform_direction.vector.z == 0:
+                self.get_logger().warn("Ray is parallel to the XY plane.")
+                return
 
             lamda = - transform_origin.point.z / transform_direction.vector.z
             x = transform_origin.point.x + transform_direction.vector.x * lamda
