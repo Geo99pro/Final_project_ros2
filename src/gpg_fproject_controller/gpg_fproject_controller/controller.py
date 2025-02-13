@@ -1,4 +1,5 @@
 import rclpy
+import rclpy.duration
 import tf2_ros
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
@@ -9,6 +10,7 @@ from tf2_ros import TransformException
 from std_msgs.msg import Int32
 from custom_msg_fproject.msg import UnboundedFloat
 from tf_transformations import euler_from_quaternion
+from rclpy.time import Time
 
 class MovePhysicalRobot(Node):
     """
@@ -48,6 +50,14 @@ class MovePhysicalRobot(Node):
         """
         self.obstacle_pose = msg #
         self.get_logger().info(f'New live obstacle received: {self.obstacle_pose.point.x}, {self.obstacle_pose.point.y}')
+        try:
+            # transform the obstacle position to the base_link frame
+            trans = self.tf_buffer.transform(msg, 'base_link', rclpy.duration.Duration(seconds=1))
+            self.obstacle_pose = trans
+            self.get_logger().info(f'Obstacle position received: {self.obstacle_pose.point.x}, {self.obstacle_pose.point.y}')
+        except TransformException as e:
+            self.get_logger().error(f'Obstacle position  Transform error: {e}')
+            self.obstacle_pose = None
 
     def obstacle_memory_callback(self, msg):
         """
@@ -63,7 +73,20 @@ class MovePhysicalRobot(Node):
         
         else:
             for i in range(0, len(data), 3):
-                obstacles.append((data[i], data[i+1], data[i+2]))
+                try:
+                    # transform the obstacle position to the base_link frame
+                    obstacles_msg = PointStamped()
+                    obstacles_msg.header.frame_id = 'odom'
+                    obstacles_msg.point.x = data[i]
+                    obstacles_msg.point.y = data[i+1]
+                    obstacles_msg.point.z = data[i+2]
+
+                    trans = self.tf_buffer.transform(obstacles_msg, 'base_link', rclpy.duration.Duration(seconds=1))
+                    obstacles.append((trans.point.x, trans.point.y, trans.point.z))
+                except TransformException as e:
+                    self.get_logger().error(f'Each obstacle Transform error: {e}')
+
+                #obstacles.append((data[i], data[i+1], data[i+2]))
             self.obstacle_memory = obstacles # list of tuples
             self.get_logger().info(f'Obstacle memory received: {self.obstacle_memory}')
             
