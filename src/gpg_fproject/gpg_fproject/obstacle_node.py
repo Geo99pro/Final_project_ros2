@@ -105,15 +105,17 @@ class ObstacleNode(Node):
 
         target_frame = "odom"
         try:
-                transform_origin = self.tf_buffer.transform(origin, target_frame, timeout=rclpy.duration.Duration(seconds=1.0))
-                transform_direction = self.tf_buffer.transform(direction, target_frame, timeout=rclpy.duration.Duration(seconds=1.0))
+            transform_origin = self.tf_buffer.transform(
+                origin, target_frame, timeout=rclpy.duration.Duration(seconds=1.0))
+            transform_direction = self.tf_buffer.transform(
+                direction, target_frame, timeout=rclpy.duration.Duration(seconds=1.0))
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
             self.get_logger().warn(f"Transformation failed: {e}")
             return
 
-        if transform_direction.vector.z == 0:
-            self.get_logger().warn("Ray is parallel to the XY plane.")
-            return
+        # if transform_direction.vector.z == 0:
+        #     self.get_logger().warn("Ray is parallel to the XY plane.")
+        #     return
 
         lamda = - transform_origin.point.z / transform_direction.vector.z
         x = transform_origin.point.x + transform_direction.vector.x * lamda
@@ -121,8 +123,8 @@ class ObstacleNode(Node):
         z = transform_origin.point.z + transform_direction.vector.z * lamda
 
         intersection_point = PointStamped()
-        intersection_point.header.frame_id = target_frame
         intersection_point.header.stamp = self.get_clock().now().to_msg()
+        intersection_point.header.frame_id = target_frame
         intersection_point.point.x = x
         intersection_point.point.y = y
         intersection_point.point.z = z
