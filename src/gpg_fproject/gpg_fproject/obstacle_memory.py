@@ -59,8 +59,9 @@ class ObstacleMemoryNode(Node):
         """
         obstacle_msg = UnboundedFloat()
         obstacle_msg.header.stamp = self.get_clock().now().to_msg()
-        obstacle_msg.float32_values  = [val for sublist in zip(self.x_coords, self.y_coords, self.z_coords) for val in sublist]
-        print(obstacle_msg.float32_values)
+        sublists = [sublist for sublist in zip(self.x_coords, self.y_coords, self.z_coords)]
+        flat = [val for sublist in sublists for val in sublist]
+        obstacle_msg.float32_values  = flat
         self.memory_publisher.publish(obstacle_msg)
         
         float_array = np.array(obstacle_msg.float32_values)
@@ -74,14 +75,16 @@ class ObstacleMemoryNode(Node):
                 PS = PointStamped()
                 PS.header.stamp = self.get_clock().now().to_msg()
                 PS.header.frame_id = "odom"
-                PS.point.x, PS.point.y, PS.point.z = obs_coords
+                PS.point.x = float(obs_coords[0])
+                PS.point.y = float(obs_coords[1])
+                PS.point.z = float(obs_coords[2])
                 memo_size = Int32()
                 memo_size.data = self.memory_size
                 try:
                     self.obstacle_publishers[topic_name].publish(PS)
                     self.memory_size_publisher.publish(memo_size)
                     self.get_logger().info(f'Obstacle {i} published. Well done buddy!')
-                    self.logger.info(f'Obstacle memory size: {self.memory_size}')
+                    self.get_logger.info(f'Obstacle memory size: {self.memory_size}')
                 except Exception as e:
                     self.get_logger().error(f'Error publishing obstacle to topic {topic_name}: {e} ! Check it out!')
         else:
