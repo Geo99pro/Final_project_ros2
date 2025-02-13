@@ -21,3 +21,7 @@ result.png
 worlds_new2.sdf~
 fproject_world.sdf~
 fproject_world.sdf.bak
+rosbag2_2024_12_16-20_32_03
+*.png
+.gitignore
+.zip
