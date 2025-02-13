@@ -44,13 +44,13 @@ class ImageNode(Node):
         """
         Callback function for the color topic"""
         self.user_color = msg.data
-        self.get_logger().info(f'I heard the color asked by the user: {self.user_color}')
+        self.get_logger().info(f'I heard the color asked by the user: {self.user_color}.**')
 
     def form_callback(self, msg):
         """
         Callback function for the form topic"""
         self.user_form = msg.data
-        self.get_logger().info(f'I heard the form asked by the user: {self.user_form}')
+        self.get_logger().info(f'**I heard the form asked by the user: {self.user_form}.**')
 
     def image_callback(self, msg):
         """
@@ -59,11 +59,11 @@ class ImageNode(Node):
             return
         try:
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            self.get_logger().info('Image received and processing and will be processed')
+            self.get_logger().info('**Image received and processing and will be processed.**')
             self.process_image(cv_image)
             
         except CvBridgeError as e:
-            self.get_logger().error(f'Error while converting image: {e}')
+            self.get_logger().error(f'**Error while converting image: {e}.**')
 
     def get_hsv_limit(self, user_color):
         """
@@ -94,12 +94,12 @@ class ImageNode(Node):
         if user_form == 'triangle' and approx_object_form in ['triangle', 'triangle approximation distorted']:
             self.get_logger().info('Triangle detected')
         elif user_form == 'box' and approx_object_form in ['box', 'box approximation distorted']:
-            self.get_logger().info('box detected')
+            self.get_logger().info('**box detected**')
         #elif user_form == 'circle' and approx_object_form in ['circle', 'circle approximation distorted']:
         #    self.get_logger().info('Circle detected')
         #else:
         else:
-            self.get_logger().info('No object detected')
+            self.get_logger().info('**No object detected**')
             return
 
     def process_image(self, cv_image):
@@ -115,13 +115,13 @@ class ImageNode(Node):
         user_form = self.user_form
 
         if user_color is None or user_form is None:
-            self.get_logger().info('User color or form not provided yet or not already received')
+            self.get_logger().info('**User color or form not provided yet or not already received**')
             return
 
         lower_hsv, upper_hsv = self.get_hsv_limit(user_color)
         mask = cv2.inRange(hsv_img, lower_hsv, upper_hsv)
         if np.all(mask == 0):
-            self.get_logger().info('No goal object detected')
+            self.get_logger().info('**No goal object detected**')
             return
         
         contours, approx_object_form, max_contours, text, coords = get_shape(cv_image, mask, 0.04, user_form)
@@ -162,7 +162,7 @@ class ImageNode(Node):
 
 
             ray = self.camera_model.projectPixelTo3dRay(bottom_point)
-            self.get_logger().info(f"Ray direction: {ray}")
+            self.get_logger().info(f"**Goal object Ray direction: {ray}**")
 
             origin = PointStamped()
             origin.header.stamp = self.get_clock().now().to_msg()
@@ -185,7 +185,7 @@ class ImageNode(Node):
                         origin, target_frame, timeout=rclpy.duration.Duration(seconds=1.0))
                 transform_direction = self.tf_buffer.transform(
                         direction, target_frame, timeout=rclpy.duration.Duration(seconds=1.0))
-            except Exception as e:
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
                     self.get_logger().warn(f"Transformation failed: {e}")
                     return
 
@@ -205,10 +205,10 @@ class ImageNode(Node):
             intersection_point.point.y = y
             intersection_point.point.z = z
 
-            self.get_logger().info(f"Intersection Point (odom): x={x}, y={y}, z={z}")
+            self.get_logger().info(f"**Intersection Point (odom): x={x}, y={y}, z={z}**")
             self.point_publisher.publish(intersection_point)
             #verify that intersection point is published
-            self.get_logger().info('Intersection image node published.')
+            self.get_logger().info('**Intersection image node published.**')
 
 def main(args=None):
     """
