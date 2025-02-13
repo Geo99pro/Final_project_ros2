@@ -1,4 +1,5 @@
 import rclpy
+import tf2_ros
 import numpy as np
 from rclpy.node import Node
 from geometry_msgs.msg import PointStamped
@@ -58,10 +59,11 @@ class ObstacleMemoryNode(Node):
         """
         obstacle_msg = UnboundedFloat()
         obstacle_msg.header.stamp = self.get_clock().now().to_msg()
-        obstacle_msg.float_storage  = [val for sublist in zip(self.x_coords, self.y_coords, self.z_coords) for val in sublist]
+        obstacle_msg.float32_values  = [val for sublist in zip(self.x_coords, self.y_coords, self.z_coords) for val in sublist]
+        print(obstacle_msg.float32_values)
         self.memory_publisher.publish(obstacle_msg)
         
-        float_array = np.array(obstacle_msg.float_storage)
+        float_array = np.array(obstacle_msg.float32_values)
         if float_array.size % 3 == 0:
             array_format = float_array.reshape(-1, 3)
             for i, obs_coords in enumerate(array_format):
